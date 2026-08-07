@@ -1,0 +1,39 @@
+M1 — baseline recall against CFPB XXXX markers
+==============================================================
+
+sample:        15,000 narratives (seed 20260806)
+marker spans:  119,261 after adjacent-merge, per DEFINITIONS.md
+
+!! THESE NUMBERS ARE A FLOOR, NOT A PRODUCTION BENCHMARK !!
+The text contains XXXX where the personal information used to be, so
+every detector is working from context alone with no surface form to
+read. All three are understated by an unmeasured amount, equally.
+The like-for-like comparison happens on injected data at M2.
+
+--------------------------------------------------------------
+OVERALL RECALL
+
+  method         recall       found / total         preds     sec
+  spacy           69.5%      82,861 / 119,261     173,603     467
+  presidio        61.6%      73,487 / 119,261     113,163     674
+  regex            0.0%           0 / 119,261       1,434       4
+
+--------------------------------------------------------------
+RECALL BY ESTIMATED CATEGORY
+
+Categories are INFERRED from surviving context, not known. The CFPB
+oracle cannot supply true categories — the original text is gone.
+NOT_PII_ESTIMATED marks spans that context says were counts or rates,
+where a low score is CORRECT behaviour, not a miss.
+
+  category                     n      regex      spacy   presidio
+  UNKNOWN                 72,010       0.0%      62.6%      56.3%
+  DATE                    27,918       0.0%      88.3%      75.7%
+  ORG_OR_PERSON            9,986       0.0%      85.2%      79.4%
+  AMOUNT_OR_COUNT          3,816       0.0%      43.1%      37.8%
+  NOT_PII_ESTIMATED        2,425       0.0%      45.6%      25.6%
+  ACCOUNT_ID               1,652       0.0%      61.7%      56.2%
+  PERSON                     690       0.0%      92.9%      91.9%
+  CASE_REF                   610       0.0%      22.6%      21.1%
+  CONTACT                    134       0.0%      64.9%      64.9%
+  LOCATION                    20       0.0%      80.0%      70.0%

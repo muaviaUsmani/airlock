@@ -40,10 +40,16 @@ $(RESULTS)/m0_extract_summary.txt: $(RESULTS)/m0_product_counts.csv
 $(RESULTS)/m0_marker_stats.txt: $(RESULTS)/m0_extract_summary.txt
 	$(PY) scripts/m0_marker_stats.py
 
+.PHONY: m1
+m1: $(RESULTS)/m1_baselines.txt  ## M1: what Presidio, spaCy and regex already achieve
+
+$(RESULTS)/m1_baselines.txt: $(RESULTS)/m0_marker_stats.txt
+	$(PY) scripts/m1_baselines.py
+
 .PHONY: repro
-repro: m0  ## Regenerate every number in the README from scratch
+repro: m0 m1  ## Regenerate every number in the README from scratch
 	@echo
-	@echo "Milestones beyond M0 are not built yet."
+	@echo "Milestones beyond M1 are not built yet."
 
 .PHONY: clean
 clean:  ## Remove generated results (keeps the downloaded corpus)

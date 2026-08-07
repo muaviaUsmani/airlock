@@ -21,7 +21,7 @@ removed the personal information. Airlock builds a synthetic transaction databas
 *attacks its own output* — taking the redacted text and trying to find the one customer it
 belongs to. That attack is the headline result.
 
-> **Status: M0 complete. M1 next.** The corpus is characterised and
+> **Status: M0 and M1 complete. M2 next.** The corpus is characterised and
 > [DEFINITIONS.md](DEFINITIONS.md) is locked. The three headline numbers below are the *shape*
 > of the claim, not the claim — they are filled in only when a committed script produces them,
 > per [the constitution](.specify/memory/constitution.md). Numbers that cannot be regenerated do
@@ -33,6 +33,12 @@ belongs to. That attack is the headline result.
 > standard by a trained person, and it still carries the field an attacker would most want —
 > which is the entire argument for measuring re-identification rather than counting names.
 > Details in [docs/02-data.md](docs/02-data.md).
+>
+> **And what M1 found:** scored against the CFPB markers, spaCy gets 69.5% and Presidio 61.6% —
+> but plain regex scores **0.0%, structurally**. A card-number pattern looks for digits; a
+> redaction marker is letters. No pattern can ever match one. The free labels cannot evaluate
+> pattern-based detection at all, which is why the like-for-like comparison has to happen on
+> injected data. Details in [docs/03-baselines.md](docs/03-baselines.md).
 
 ---
 
@@ -180,7 +186,7 @@ silently resolved.
 | | milestone | done when | status |
 |---|---|---|---|
 | **M0** | Characterise the corpus | `DEFINITIONS.md` exists, corpus statistics committed | **done** |
-| **M1** | Measure the baselines | Published table of what free tools already achieve | not started |
+| **M1** | Measure the baselines | Published table of what free tools already achieve | **done** |
 | **M2** | Injection harness + adversary | N narratives with known PII positions, each mapped to one synthetic customer | not started |
 | **M3** | The model | Beats M1 on contextual categories, or reports that it does not | not started |
 | **M4** | **The attack** | Re-identification rate for raw / Presidio / Airlock text | not started |
