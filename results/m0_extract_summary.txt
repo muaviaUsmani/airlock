@@ -1,0 +1,8 @@
+rows scanned:                 16,935,987
+credit-card narratives kept:  224,952
+prepaid/gift/etc dropped:     9,639
+
+kept by sub-product:
+  General-purpose credit card or charge card     176,582
+  Store credit card                               29,533
+  (none)                                          18,837

@@ -1,0 +1,207 @@
+# Airlock
+
+**A 300MB model, running on a laptop, that strips personal information out of bank complaint
+text — and an attack that measures whether the customer can still be identified afterwards.**
+
+---
+
+## TL;DR
+
+A bank has hundreds of thousands of written customer complaints. It wants a frontier model to
+analyse them. It cannot send them, because the text is full of personal information that is not
+allowed to leave the building.
+
+So something has to strip that information out first — and that something has to run locally,
+because *if you could send the text out to be checked, you would not have needed to check it.*
+
+Airlock is that something. It is a small model that runs on an M1 MacBook with no GPU.
+
+The interesting part is not the redaction. It is the **measurement**. Anyone can claim they
+removed the personal information. Airlock builds a synthetic transaction database and then
+*attacks its own output* — taking the redacted text and trying to find the one customer it
+belongs to. That attack is the headline result.
+
+> **Status: M0 in progress.** No results yet. The three numbers below are the shape of the
+> claim, not the claim. They are filled in only when a committed script produces them, per
+> [the constitution](.specify/memory/constitution.md). Numbers that cannot be regenerated do
+> not get published here.
+
+---
+
+## The claim this project is trying to earn
+
+> On real credit-card complaint narratives, a 300MB model running on a laptop removes personal
+> information that Microsoft Presidio misses by **[X]** percentage points, and reduces the rate
+> at which a customer can be re-identified from the remaining text from **[A]%** to **[B]%** —
+> while a frontier model still answers **[C]%** of downstream business questions correctly on
+> the redacted text.
+
+Three numbers. All mechanically measurable. None requires a human or a model to judge anything.
+
+**If any of the three cannot be measured honestly, this README reports that instead.** A clean
+negative result is an acceptable outcome here and gets written up as one — see
+[docs/08-limitations.md](docs/08-limitations.md).
+
+---
+
+## Why this needs a model at all
+
+Some personal information is easy. A credit card number is sixteen digits and passes a
+checksum. An email address has an `@`. A regular expression finds these perfectly, and
+[Microsoft Presidio](https://microsoft.github.io/presidio/) already does it well and for free.
+
+**Airlock is not trying to beat Presidio at that, and does not pretend to.**
+
+The hard part is the information that has no pattern:
+
+> *"I explained to the manager at the Fremont branch that my mother's maiden name had changed
+> after her second marriage, and he still wouldn't unlock the card my ex-husband opened in
+> 2019."*
+
+There is no regular expression for *"my mother's maiden name"*, *"the Fremont branch"*, or
+*"my ex-husband"*. Every one of them helps identify the customer. That is where a model earns
+its place.
+
+### And then the part that is the actual contribution
+
+Even after you remove every name and number, the text can still identify someone:
+
+> *"I bought coffee on Main Street on Tuesday for $4.17 and the card declined."*
+
+That sentence contains no personal information by any standard definition. It also uniquely
+identifies one customer, if you happen to hold the bank's transaction records.
+
+So the real question is not *"did we find all the names?"* It is **"can the customer still be
+identified after we're done?"** Answering that means actually trying to identify them — which
+is what the synthetic transaction system in this project is for.
+
+---
+
+## How it works
+
+```
+  CFPB complaints          the XXXX markers left behind by CFPB staff
+  (real text, public)  ──▶ are free labels: a human decided personal
+                           information was here.  →  RECALL oracle
+
+  clean narratives     ──▶ inject personal information we generated
+  (no markers)             ourselves, at positions we recorded
+                                                   →  PRECISION oracle
+
+  redacted text        ──▶ synthetic transaction DB tries to find the
+                           one matching customer
+                                                   →  THE HEADLINE
+```
+
+Three sources of truth, none of which is a human or a model grading an answer.
+
+| piece | what it is | where |
+|---|---|---|
+| **Corpus** | Real consumer complaints, published by the US CFPB, already scrubbed by humans | [docs/02-data.md](docs/02-data.md) |
+| **Recall oracle** | The `XXXX` markers CFPB staff left behind. Noisy — the noise is measured, not assumed away | [docs/02-data.md](docs/02-data.md) |
+| **Precision oracle** | Personal information we injected ourselves, at positions we wrote down | [docs/02-data.md](docs/02-data.md) |
+| **The adversary** | A deliberately minimal fake card system. Not a data generator — an attacker | [docs/05-attack.md](docs/05-attack.md) |
+
+---
+
+## Running it
+
+```bash
+./scripts/bootstrap.sh
+```
+
+That builds a virtual environment, downloads the CFPB corpus (~1.3GB compressed, ~8.4GB
+unpacked) and records which nightly build you got. The corpus is **never committed** to this
+repository — it is public data that is re-published every night, so what belongs in git is the
+download step and a record of which night the numbers came from.
+
+Then:
+
+```bash
+make repro
+```
+
+That regenerates every number in this README from scratch. A number `make repro` does not touch
+is a number that does not belong here.
+
+Prefer containers? Same thing, no Python version to match:
+
+```bash
+docker compose run --rm airlock make repro
+```
+
+Run `make help` to see the individual milestones.
+
+---
+
+## Documentation
+
+Written as the work happens, not assembled at the end. Assume the reader remembers nothing —
+including the person who wrote it.
+
+| document | what is in it |
+|---|---|
+| [DEFINITIONS.md](DEFINITIONS.md) | What counts as personal information, a correct removal, a re-identification. **Locked at M0.** |
+| [docs/01-why.md](docs/01-why.md) | The problem in plain language, with examples |
+| [docs/02-data.md](docs/02-data.md) | Where the corpus comes from and what is wrong with it |
+| [docs/03-baselines.md](docs/03-baselines.md) | What Presidio, spaCy and plain regex already achieve |
+| [docs/04-model.md](docs/04-model.md) | What was trained, and why that architecture |
+| [docs/05-attack.md](docs/05-attack.md) | How re-identification is measured |
+| [docs/06-utility.md](docs/06-utility.md) | The leakage-versus-usefulness trade-off |
+| [docs/07-ablations.md](docs/07-ablations.md) | What each component actually contributed |
+| [docs/08-limitations.md](docs/08-limitations.md) | Everything this does not do. Written honestly. |
+
+**Specs and plans** live in [`specs/`](specs/), one directory per milestone, managed with
+[Spec Kit](https://github.com/github/spec-kit). Each has the feature spec, the implementation
+plan, and the task breakdown. Start there if you want to know *why* something is built the way
+it is rather than *what* it does.
+
+**Decisions** live in [`DECISIONS/`](DECISIONS/) — one file per fork, with the options that were
+considered and the reasoning attached. The brief this project was built from left three
+decisions deliberately open; each one is resolved there, in writing, before the code that
+depends on it was written.
+
+The [project constitution](.specify/memory/constitution.md) holds the rules that do not bend:
+reproducibility, no secrets, negative results get published, and forks get surfaced rather than
+silently resolved.
+
+---
+
+## Milestones
+
+| | milestone | done when | status |
+|---|---|---|---|
+| **M0** | Characterise the corpus | `DEFINITIONS.md` exists, corpus statistics committed | in progress |
+| **M1** | Measure the baselines | Published table of what free tools already achieve | not started |
+| **M2** | Injection harness + adversary | N narratives with known PII positions, each mapped to one synthetic customer | not started |
+| **M3** | The model | Beats M1 on contextual categories, or reports that it does not | not started |
+| **M4** | **The attack** | Re-identification rate for raw / Presidio / Airlock text | not started |
+| **M5** | Does redacted text still work? | Leakage-versus-utility chart | not started |
+| **M6** | Ablations, docs, one command | Someone who has never seen this repo can clone it and get these numbers | not started |
+
+M0 carries a stop condition: if the CFPB scrubbing turns out to be too inconsistent to serve as
+labels, the project stops and reports that. It is not treated as a formality.
+
+---
+
+## What this is not
+
+- **Not a general-purpose PII detector.** It is tuned to one domain. The narrowness is the
+  argument, not a limitation to apologise for.
+- **Not a compliance tool.** Nothing here satisfies any regulation, and nothing in this
+  repository should be read as suggesting it does.
+- **Not a replacement for Presidio.** The interesting result is where the two differ.
+- **Not a product.** No interface beyond a command line. No hosting, no service.
+- **Not a benchmark of frontier models.** A frontier model appears in exactly one place — M5,
+  answering questions about redacted text.
+
+---
+
+## Context
+
+Airlock is the first of four projects on one thesis: *a small open-weight model, trained for one
+narrow job, running alongside a frontier model rather than replacing it.* The portfolio asks when
+a small team should call Claude or GPT, and when they should run their own small model.
+
+Airlock answers from the **privacy** angle: the task exists precisely because the data cannot
+leave the building.

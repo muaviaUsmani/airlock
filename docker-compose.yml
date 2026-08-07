@@ -1,0 +1,35 @@
+# Local convenience only. Nothing here listens on a port or stays running.
+#
+#   docker compose run --rm airlock make data    # download + unpack the corpus
+#   docker compose run --rm airlock make m0      # milestone 0
+#   docker compose run --rm airlock make repro   # every number in the README
+#
+# The corpus and any generated data live in named volumes rather than the image,
+# because the corpus is ~8.4GB and is re-published nightly — baking it in would
+# make the image enormous and instantly stale.
+#
+# results/ and docs/ are bind-mounted to the host so that numbers produced inside
+# the container land in the working tree where they can be committed.
+
+services:
+  airlock:
+    build: .
+    image: airlock:local
+    working_dir: /airlock
+    volumes:
+      - corpus:/airlock/data
+      - ./results:/airlock/results
+      - ./docs:/airlock/docs
+      - ./DECISIONS:/airlock/DECISIONS
+    # M5 is the only step that talks to a frontier model, and it reads its key
+    # from the environment. Every other step runs with no credentials at all.
+    # Unset on the host, this passes through as empty and M5 will refuse to run.
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    # The corpus pass is memory-hungry but streams in chunks; this ceiling
+    # matches the 16GB M1 the project targets, so container runs fail the same
+    # way a native run would rather than succeeding on a bigger machine.
+    mem_limit: 12g
+
+volumes:
+  corpus:

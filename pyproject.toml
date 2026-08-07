@@ -1,0 +1,24 @@
+[project]
+name = "airlock"
+version = "0.0.1"
+description = "Local PII redaction gate for consumer complaint text, measured by whether the customer can still be re-identified."
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.2",
+    "pyarrow>=16.0",
+]
+
+[project.optional-dependencies]
+# M1 baselines. Installed separately so that M0 can run with almost nothing.
+baselines = [
+    "presidio-analyzer>=2.2",
+    "presidio-anonymizer>=2.2",
+    "spacy>=3.7",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

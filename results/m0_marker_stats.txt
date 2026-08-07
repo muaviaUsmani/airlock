@@ -1,0 +1,59 @@
+M0 — CFPB credit-card narratives: XXXX marker statistics
+==============================================================
+
+narratives:                           224,952
+  with >=1 redaction marker:          184,633  (82.1%)
+  with no marker at all:               40,319  (17.9%)
+  with >=5 markers:                   129,849  (57.7%)
+
+The 'no marker at all' group is the raw material for M2 injection:
+text already scrubbed by a human, into which we insert personal
+information at positions we record ourselves.
+
+--------------------------------------------------------------
+LENGTH
+  words per narrative
+    mean 216   p5 27   p25 80   median 160   p75 276   p95 591   max 6469
+
+--------------------------------------------------------------
+MARKER DENSITY  (the recall oracle's raw material)
+  markers per narrative
+    mean 12   p5 0   p25 2   median 6   p75 15   p95 42   max 2514
+  markers per narrative (marked only)
+    mean 15   p5 1   p25 4   median 9   p75 18   p95 47   max 2514
+
+--------------------------------------------------------------
+OVER-REDACTION  (how much of the text is gone)
+  markers as % of words
+    mean 5.3   p5 0.0   p25 1.3   median 3.8   p75 7.4   p95 15.5   max 700.0
+  markers as % of words (marked only)
+    mean 6.5   p5 0.9   p25 2.6   median 4.9   p75 8.3   p95 16.7   max 700.0
+
+The spread between p5 and p95 here is the inconsistency the brief
+warns about. A tight spread means the scrubbing standard was applied
+evenly and recall against it is meaningful. A wide spread means some
+narratives were scrubbed far harder than others, and a model that
+matches the average will look wrong on both tails.
+
+--------------------------------------------------------------
+GRANULARITY  (were multi-word things scrubbed token by token?)
+  adjacent-marker runs per narrative
+    mean 1.5   p5 0.0   p25 0.0   median 0.0   p75 2.0   p95 6.0   max 484.0
+  longest run, in markers (narratives with a run)
+    mean 3.8   p5 2.0   p25 2.0   median 3.0   p75 4.0   p95 8.0   max 2500.0
+
+A run of 3+ usually means one entity — a full name, a street address —
+was replaced word by word. Runs inflate any per-marker count, so span
+level metrics must merge them. That merge rule goes in DEFINITIONS.md.
+
+--------------------------------------------------------------
+WHAT SURVIVED REDACTION
+  narratives containing a date marker (XX/XX/XXXX):    85,241  (37.9%)
+  narratives containing an intact amount ({$x.xx}):   99,421  (44.2%)
+  intact amounts per narrative (where present)
+    mean 3.1   p5 1.0   p25 1.0   median 2.0   p75 4.0   p95 9.0   max 99.0
+
+Amounts are NOT redacted by the CFPB — they are reformatted and kept.
+An exact transaction amount is a strong join key against a transaction
+database, so this row is a preview of the M4 attack surface.
+

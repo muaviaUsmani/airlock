@@ -1,0 +1,30 @@
+# Data is downloaded, never committed. See docs/02-data.md for provenance.
+data/
+!data/.gitkeep
+
+# Corpus text never enters the repository, even in results, and even though the
+# CFPB has already scrubbed it and published it. This file is 100 verbatim
+# narratives drawn for hand inspection; it regenerates from seed 20260806 via
+# `make m0`, so committing it would add real complaint text to git history for
+# no reproducibility benefit at all.
+results/m0_sample_for_review.txt
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Model weights and training runs
+models/
+runs/
+wandb/
+
+# Secrets. Nothing in this project needs a key except M5, which reads from env.
+.env
+*.key
+
+# macOS
+.DS_Store

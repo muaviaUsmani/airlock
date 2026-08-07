@@ -1,0 +1,347 @@
+context_type,left_context,occurrences,share_of_spans
+unigram,xxxx,5880,4.764
+unigram,#,1943,1.574
+unigram,by,1791,1.451
+unigram,@date@,1704,1.381
+unigram,is,1281,1.038
+unigram,number,1078,0.873
+unigram,that,1069,0.866
+unigram,$,1011,0.819
+unigram,called,983,0.796
+unigram,xxxx/,868,0.703
+unigram,was,851,0.69
+unigram,since,744,0.603
+unigram,through,670,0.543
+unigram,card,642,0.52
+unigram,contacted,612,0.496
+unigram,account,555,0.45
+unigram,-,548,0.444
+unigram,bank,541,0.438
+unigram,over,498,0.404
+unigram,as,491,0.398
+unigram,or,487,0.395
+unigram,/,481,0.39
+unigram,sincerely,461,0.374
+unigram,named,430,0.348
+unigram,me,417,0.338
+unigram,id,415,0.336
+unigram,xxxx/xxxx/,351,0.284
+unigram,have,318,0.258
+unigram,around,317,0.257
+unigram,name,314,0.254
+unigram,about,313,0.254
+unigram,chase,304,0.246
+unigram,this,302,0.245
+unigram,/year>,293,0.237
+unigram,merchant,292,0.237
+unigram,one,292,0.237
+unigram,via,287,0.233
+unigram,until,282,0.228
+unigram,citi,267,0.216
+unigram,supervisor,265,0.215
+unigram,within,256,0.207
+unigram,call,250,0.203
+unigram,ending,248,0.201
+unigram,contact,245,0.199
+unigram,after,243,0.197
+unigram,had,242,0.196
+unigram,last,239,0.194
+unigram,approximately,237,0.192
+unigram,than,235,0.19
+unigram,company,226,0.183
+unigram,you,217,0.176
+unigram,no,216,0.175
+unigram,s,205,0.166
+unigram,but,205,0.166
+unigram,early,198,0.16
+unigram,only,197,0.16
+unigram,dated,194,0.157
+unigram,all,189,0.153
+unigram,between,189,0.153
+unigram,because,184,0.149
+unigram,&,184,0.149
+unigram,their,182,0.147
+unigram,both,180,0.146
+unigram,paid,174,0.141
+unigram,address,174,0.141
+unigram,against,171,0.139
+unigram,late,170,0.138
+unigram,representative,166,0.135
+unigram,express,160,0.13
+unigram,am,157,0.127
+unigram,case,152,0.123
+unigram,date,150,0.122
+unigram,now,149,0.121
+unigram,today,142,0.115
+unigram,under,141,0.114
+unigram,new,140,0.113
+unigram,received,139,0.113
+unigram,time,139,0.113
+unigram,be,137,0.111
+unigram,charged,136,0.11
+unigram,complaint,135,0.109
+unigram,our,135,0.109
+unigram,email,134,0.109
+unigram,dispute,128,0.104
+unigram,your,128,0.104
+unigram,it,126,0.102
+unigram,are,126,0.102
+unigram,manager,125,0.101
+unigram,another,124,0.1
+unigram,not,124,0.1
+unigram,phone,123,0.1
+unigram,like,121,0.098
+unigram,before,119,0.096
+unigram,made,118,0.096
+unigram,@,118,0.096
+unigram,credit,117,0.095
+unigram,these,116,0.094
+unigram,receive,112,0.091
+unigram,were,111,0.09
+unigram,them,110,0.089
+unigram,asked,109,0.088
+unigram,pay,108,0.088
+unigram,america,105,0.085
+unigram,using,105,0.085
+unigram,mr,105,0.085
+unigram,charges,105,0.085
+bigram,xxxx xxxx,2930,2.374
+bigram,xxxx and,1985,1.608
+bigram,ending in,1062,0.861
+bigram,xxxx of,781,0.633
+bigram,on the,758,0.614
+bigram,xxxx in,653,0.529
+bigram,to the,546,0.442
+bigram,of the,531,0.43
+bigram,xxxx to,528,0.428
+bigram,i called,520,0.421
+bigram,on my,493,0.399
+bigram,for the,458,0.371
+bigram,spoke with,429,0.348
+bigram,on xxxx/,425,0.344
+bigram,@date@ at,412,0.334
+bigram,on @date@,411,0.333
+bigram,xxxx on,400,0.324
+bigram,i contacted,360,0.292
+bigram,in the,339,0.275
+bigram,for a,333,0.27
+bigram,to my,331,0.268
+bigram,xxxx at,326,0.264
+bigram,spoke to,314,0.254
+bigram,with the,308,0.25
+bigram,xxxx or,304,0.246
+bigram,@date@ /year>,293,0.237
+bigram,in xxxx,287,0.233
+bigram,case #,272,0.22
+bigram,xxxx #,257,0.208
+bigram,@date@ /,253,0.205
+bigram,xxxx @date@,251,0.203
+bigram,from the,245,0.199
+bigram,capital one,238,0.193
+bigram,credit card,236,0.191
+bigram,at the,233,0.189
+bigram,name is,227,0.184
+bigram,to a,227,0.184
+bigram,back in,226,0.183
+bigram,with a,219,0.177
+bigram,from my,219,0.177
+bigram,xxxx from,219,0.177
+bigram,and the,217,0.176
+bigram,have a,213,0.173
+bigram,xxxx for,205,0.166
+bigram,card in,205,0.166
+bigram,number is,203,0.164
+bigram,account number,202,0.164
+bigram,email from,200,0.162
+bigram,xxxx /,198,0.16
+bigram,had a,197,0.16
+bigram,of my,190,0.154
+bigram,amount of,180,0.146
+bigram,xxxx -,177,0.143
+bigram,i have,176,0.143
+bigram,the merchant,172,0.139
+bigram,end of,172,0.139
+bigram,on xxxx/xxxx/,171,0.139
+bigram,back to,167,0.135
+bigram,thank you,166,0.135
+bigram,to contact,165,0.134
+bigram,case number,162,0.131
+bigram,that the,160,0.13
+bigram,was in,160,0.13
+bigram,to xxxx,159,0.129
+bigram,american express,154,0.125
+bigram,month of,151,0.122
+bigram,by the,146,0.118
+bigram,i am,145,0.117
+bigram,account #,144,0.117
+bigram,am a,142,0.115
+bigram,with my,141,0.114
+bigram,xxxx &,139,0.113
+bigram,@date@ and,137,0.111
+bigram,in early,135,0.109
+bigram,xxxx the,135,0.109
+bigram,out to,135,0.109
+bigram,more than,133,0.108
+bigram,account with,133,0.108
+bigram,for my,130,0.105
+bigram,as of,129,0.105
+bigram,balance of,128,0.104
+bigram,xxxx with,127,0.103
+bigram,i had,127,0.103
+bigram,due to,124,0.1
+bigram,letter from,123,0.1
+bigram,at a,119,0.096
+bigram,id #,117,0.095
+bigram,the last,117,0.095
+bigram,payment of,116,0.094
+bigram,to call,116,0.094
+bigram,account in,115,0.093
+bigram,of $,111,0.09
+bigram,on xxxx,111,0.09
+bigram,was a,111,0.09
+bigram,card on,108,0.088
+bigram,charge from,107,0.087
+bigram,card ending,107,0.087
+bigram,my account,107,0.087
+bigram,went to,105,0.085
+bigram,account on,103,0.083
+bigram,me to,103,0.083
+bigram,with xxxx,102,0.083
+bigram,of america,102,0.083
+bigram,@date@ -,102,0.083
+bigram,in my,102,0.083
+bigram,card with,100,0.081
+bigram,in late,99,0.08
+bigram,company called,99,0.08
+bigram,on a,98,0.079
+bigram,dispute with,97,0.079
+bigram,card from,95,0.077
+bigram,name of,95,0.077
+bigram,at least,95,0.077
+bigram,of xxxx,94,0.076
+bigram,xxxx ca,93,0.075
+bigram,it was,91,0.074
+bigram,is a,89,0.072
+bigram,charges from,88,0.071
+bigram,reference number,87,0.07
+bigram,from xxxx,86,0.07
+trigram,xxxx xxxx xxxx,1167,0.946
+trigram,xxxx xxxx and,759,0.615
+trigram,account ending in,412,0.334
+trigram,xxxx xxxx in,341,0.276
+trigram,in xxxx of,314,0.254
+trigram,card ending in,313,0.254
+trigram,on xxxx xxxx,245,0.199
+trigram,on @date@ at,220,0.178
+trigram,from xxxx to,218,0.177
+trigram,i spoke with,190,0.154
+trigram,my name is,172,0.139
+trigram,xxxx xxxx on,145,0.117
+trigram,and spoke with,144,0.117
+trigram,the end of,142,0.115
+trigram,i am a,139,0.113
+trigram,i spoke to,139,0.113
+trigram,the xxxx of,139,0.113
+trigram,xxxx xxxx at,130,0.105
+trigram,the month of,126,0.102
+trigram,xxxx xxxx #,125,0.101
+trigram,the amount of,123,0.1
+trigram,an email from,117,0.095
+trigram,in xxxx and,109,0.088
+trigram,i have a,108,0.088
+trigram,xxxx xxxx to,106,0.086
+trigram,bank of america,94,0.076
+trigram,and spoke to,94,0.076
+trigram,i had a,91,0.074
+trigram,on @date@ /,88,0.071
+trigram,xxxx xxxx ca,87,0.07
+trigram,i was in,81,0.066
+trigram,the name of,80,0.065
+trigram,credit card in,80,0.065
+trigram,reached out to,80,0.065
+trigram,xxxx xxxx for,79,0.064
+trigram,@date@ /year> at,77,0.062
+trigram,xxxx xxxx @date@,77,0.062
+trigram,xxxx xxxx or,75,0.061
+trigram,a letter from,75,0.061
+trigram,a company called,73,0.059
+trigram,view detailsxx/ @date@,72,0.058
+trigram,/ xxxx /,71,0.058
+trigram,on @date@ /year>,70,0.057
+trigram,a balance of,70,0.057
+trigram,xxxx xxxx from,69,0.056
+trigram,i live in,68,0.055
+trigram,credit card with,67,0.054
+trigram,xxxx xxxx -,67,0.054
+trigram,i went to,67,0.054
+trigram,on @date@ and,67,0.054
+trigram,this matter sincerely,64,0.052
+trigram,was told by,64,0.052
+trigram,xxxx xxxx ny,63,0.051
+trigram,of xxxx and,62,0.05
+trigram,with xxxx and,62,0.05
+trigram,a total of,61,0.049
+trigram,applied for a,61,0.049
+trigram,xxxx xxxx fl,61,0.049
+trigram,the xxxx and,59,0.048
+trigram,number ending in,58,0.047
+trigram,xxxx xxxx of,58,0.047
+trigram,xxxx and the,58,0.047
+trigram,credit card on,57,0.046
+trigram,credit card from,55,0.045
+trigram,in xxxx xxxx,55,0.045
+trigram,xxxx xxxx tx,54,0.044
+trigram,payment history with,53,0.043
+trigram,a supervisor named,53,0.043
+trigram,i called the,53,0.043
+trigram,a dispute with,51,0.041
+trigram,the beginning of,50,0.041
+trigram,xxxx i called,50,0.041
+trigram,to xxxx and,49,0.04
+trigram,a call from,49,0.04
+trigram,to xxxx xxxx,49,0.04
+trigram,in xxxx or,48,0.039
+trigram,xxxx xxxx /,48,0.039
+trigram,both xxxx and,46,0.037
+trigram,xxxx xxxx ga,46,0.037
+trigram,a letter dated,46,0.037
+trigram,i purchased a,45,0.036
+trigram,xxxx on xxxx/,45,0.036
+trigram,financial protection bureau,44,0.036
+trigram,xxxx ending in,44,0.036
+trigram,xxxx of the,44,0.036
+trigram,transferred me to,44,0.036
+trigram,on or about,44,0.036
+trigram,due on the,43,0.035
+trigram,credit score of,43,0.035
+trigram,between xxxx and,43,0.035
+trigram,of xxxx xxxx,42,0.034
+trigram,for xxxx and,42,0.034
+trigram,went to the,42,0.034
+trigram,xxxx xxxx with,41,0.033
+trigram,xxxx credit card,41,0.033
+trigram,xxxx xxxx de,41,0.033
+trigram,of stress and,41,0.033
+trigram,a payment of,40,0.032
+trigram,from xxxx and,40,0.032
+trigram,was opened in,39,0.032
+trigram,xxxx xxxx &,39,0.032
+trigram,my account in,39,0.032
+trigram,my account on,39,0.032
+trigram,i talked to,37,0.03
+trigram,xxxx xxxx the,37,0.03
+trigram,xxxx in xxxx,37,0.03
+trigram,at xxxx xxxx,37,0.03
+trigram,i have an,37,0.03
+trigram,complaint with the,37,0.03
+trigram,customer service at,36,0.029
+trigram,i was charged,36,0.029
+trigram,card the delta,36,0.029
+trigram,ending in #,35,0.028
+trigram,nv restaurants $,35,0.028
+trigram,on @date@ from,34,0.028
+trigram,on @date@ for,33,0.027
+trigram,to xxxx in,33,0.027
+trigram,report with the,33,0.027
+trigram,xxxx xxxx sd,33,0.027
+trigram,since xxxx of,33,0.027
