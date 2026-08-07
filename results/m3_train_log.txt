@@ -1,0 +1,16 @@
+M3 branch A — encoder training log
+==========================================================
+base model      microsoft/deberta-v3-base
+parameters      183,856,929
+device          mps
+training rows   64
+epochs          1   batch 4 x2 accum
+lr              3e-05   warmup 0.06
+max seq length  384
+seed            20260806
+
+epoch 1: mean loss nan  (0.4 min)
+
+total training time  0.4 min
+model on disk        376 MB
+saved to             models/airlock-encoder

@@ -1,0 +1,24 @@
+# Airlock dependencies.
+#
+# MUST be installed into a NATIVE arm64 Python on Apple Silicon. An x86_64
+# interpreter under Rosetta caps torch at 2.2.2 (PyTorch dropped x86 macOS
+# wheels after that) and gives no Metal acceleration, which contradicts this
+# project's premise that everything runs on an M1 laptop.
+# scripts/bootstrap.sh checks this.
+
+pandas>=2.2
+pyarrow>=15
+requests>=2.31
+tqdm>=4.66
+
+# M1 baselines
+presidio-analyzer>=2.2
+presidio-anonymizer>=2.2
+spacy>=3.7
+
+# M3 model
+torch>=2.4
+transformers>=4.44
+sentencepiece>=0.2
+protobuf>=4.25
+accelerate>=0.34
