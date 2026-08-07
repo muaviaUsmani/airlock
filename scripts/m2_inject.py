@@ -7,8 +7,7 @@ inserts personal information we generated ourselves at positions we record.
 Those labels are facts, not opinions. We wrote them down when we put them in.
 Since decision 003 removed hand-labelling, this file is the ONLY source of exact
 ground truth in the project, and since M1 showed a model trained on marked text
-just learns "XXXX -> redact", it is also the only viable training substrate. It
-carries more weight than the brief's one paragraph suggests.
+just learns "XXXX -> redact", it is also the only viable training substrate.
 
 WHAT MAKES A NARRATIVE MAP TO EXACTLY ONE CUSTOMER
 --------------------------------------------------
@@ -17,34 +16,41 @@ their city, their employer, and the exact amount, date and merchant of a real
 transaction of theirs. Invent the values instead and the narrative describes
 nobody, and the M4 attack has nothing to find.
 
+TWO LEAKS THIS FILE EXISTS TO PREVENT
+-------------------------------------
+Both are versions of the same failure: a model scoring well by learning something
+other than what personal information looks like.
+
+1. NARRATIVE LEAK. A clean narrative used for training never appears in an
+   evaluation set. Enforced by splitting the pool before anything is generated.
+
+2. TEMPLATE LEAK. The carrier sentences are formulaic. A model trained and tested
+   on the same phrasings can memorise the phrasing rather than the PII — the same
+   degenerate shortcut as "XXXX -> redact", one level up. So training uses four
+   templates per category and evaluation uses two the model has never seen. The
+   gap between held-out-template and seen-template performance is a published
+   number, not an assumption. See DECISIONS/006-model-architecture.md.
+
 TWO DISTRIBUTIONS, NOT ONE
 --------------------------
-Per decision 004, this runs twice:
-
-  natural     measured corpus frequencies. Over-weighted toward DATE because
-              XX/XX/XXXX is the only category that survives redaction still
-              labelled. Drives the M4 headline, where realistic co-occurrence
-              is what matters.
-
-  stratified  equal power per category. Drives per-category scoring, where a
-              category at 0.1% would have confidence intervals too wide to
-              support any claim.
-
-Neither is hard-coded — the distribution is a parameter. Every published number
-names which set produced it.
+Per decision 004: `natural` (measured corpus frequencies) drives the M4 headline;
+`stratified` (equal power per category) drives per-category scoring. Neither is
+hard-coded and every published number names its set.
 
 A LIMITATION, STATED HERE BECAUSE IT LIVES HERE
 -----------------------------------------------
 Injected sentences are more uniform than organic prose. A real complaint weaves
 personal information through its own argument; this splices in well-formed
-carrier sentences. That makes injected PII somewhat EASIER to spot than the real
-thing, so precision and recall measured here are optimistic for every method
-equally. docs/08-limitations.md carries this.
+carrier sentences. Injected PII is therefore somewhat EASIER to spot than the
+real thing, and scores measured here are optimistic for every method equally.
+The transfer check against real CFPB markers is what bounds that.
 
 Reads:  data/interim/creditcard_narratives.parquet
         data/synthetic/{customers,transactions}.parquet
-Writes: data/synthetic/injected_natural.parquet
+Writes: data/synthetic/injected_train.parquet
+        data/synthetic/injected_natural.parquet
         data/synthetic/injected_stratified.parquet
+        data/synthetic/injected_seen_templates.parquet   (leak-gap control)
         results/m2_injection_summary.txt
 """
 
@@ -57,19 +63,24 @@ from pathlib import Path
 
 import pandas as pd
 
+from m2_templates import CATEGORIES, split as split_templates
+
 ROOT = Path(__file__).resolve().parents[1]
 SYN = ROOT / "data" / "synthetic"
 RESULTS = ROOT / "results"
 NARRATIVES = ROOT / "data" / "interim" / "creditcard_narratives.parquet"
 
 SEED = 20260806
-N_NARRATIVES = 4_000
+N_TRAIN = 15_000
+N_EVAL = 4_000
 SPANS_PER_NARRATIVE = (2, 7)
 MARKER = re.compile(r"(?<![A-Za-z0-9])X{2,}")
+FIELD = re.compile(r"\[\[(\w+)\]\]")
+SENT_SPLIT = re.compile(r"(?<=[.!?])\s+")
 
 # --- the two distributions -------------------------------------------------
-# NATURAL comes from results/m2_category_distribution.csv, renormalised over the
-# resolved PII spans. It is NOT the true corpus distribution — see decision 004.
+# NATURAL is renormalised from results/m2_category_distribution.csv over resolved
+# PII spans. It is NOT the true corpus distribution — see decision 004.
 NATURAL = {
     "DATE": 70.4, "ACCOUNT_ID": 7.0, "ORG_THIRD_PARTY": 6.1, "PERSON": 4.5,
     "TEMPORAL": 3.8, "AMOUNT": 2.5, "CASE_REF": 2.0, "CONTACT": 1.1,
@@ -77,7 +88,6 @@ NATURAL = {
     "RELATIONSHIP": 0.1, "GOV_ID": 0.1, "LIFE_EVENT": 0.1, "EMPLOYER": 0.1,
     "HEALTH": 0.05,
 }
-CATEGORIES = list(NATURAL)
 STRATIFIED = {c: 100 / len(CATEGORIES) for c in CATEGORIES}
 
 TIER = {
@@ -88,95 +98,60 @@ TIER = {
 }
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-TIMES = ["9am", "10:30am", "just after noon", "2pm", "4:45pm", "the evening"]
+TIMES = ["9am", "10:30am", "just after noon", "2pm", "4:45pm", "6pm"]
 
 
-def fmt_date(iso: str, rng: random.Random) -> str:
-    y, m, d = iso.split("-")
-    return rng.choice([f"{int(m)}/{int(d)}/{y}", f"{m}/{d}/{y}", f"{int(m)}/{int(d)}/{y[2:]}"])
+def resolve(field: str, cust: dict, txn: dict, rng: random.Random) -> str:
+    y, m, d = txn["txn_date"].split("-")
+    return {
+        "person_first": cust["relative_name"].split()[0],
+        "person_full": cust["full_name"],
+        "last4": txn["last4"],
+        "account_num": f"4{rng.randint(10**10, 10**11 - 1)}",
+        "ssn": f"{rng.randint(100,899)}-{rng.randint(10,99)}-{rng.randint(1000,9999)}",
+        "phone": cust["phone"],
+        "email": cust["email"],
+        "address": f"{cust['street']}, {cust['city']}, {cust['state']} {cust['zip']}",
+        "case_ref": str(rng.randint(10**6, 10**7 - 1)),
+        "relationship": cust["relationship_type"],
+        "city": cust["city"],
+        "city_state": f"{cust['city']}, {cust['state']}",
+        "employer": cust["employer"],
+        "life_event": cust["life_event"],
+        "protected": cust["protected_attr"],
+        "health": cust["health_procedure"],
+        "bank": cust["third_party_bank"],
+        "amount": f"${txn['amount']:.2f}",
+        "date": rng.choice([f"{int(m)}/{int(d)}/{y}", f"{m}/{d}/{y}", f"{int(m)}/{int(d)}/{y[2:]}"]),
+        "merchant": txn["merchant_name"],
+        "weekday": rng.choice(WEEKDAYS),
+        "time": rng.choice(TIMES),
+    }[field]
 
 
-def build_sentence(cat: str, cust: dict, txn: dict, rng: random.Random):
+def render(template: str, cat: str, cust: dict, txn: dict, rng: random.Random):
+    """Split a template into literal parts and (category, value) parts."""
+    parts, last = [], 0
+    for m in FIELD.finditer(template):
+        if m.start() > last:
+            parts.append(template[last : m.start()])
+        parts.append((cat, resolve(m.group(1), cust, txn, rng)))
+        last = m.end()
+    if last < len(template):
+        parts.append(template[last:])
+    return parts
+
+
+def inject(narrative, cats, templates, cust, txn, rng):
     """
-    Return (parts) where each part is either a literal string or a
-    (category, value) tuple. Offsets are computed by the caller so that what we
-    record is exactly what lands in the text.
+    Splice one carrier sentence per sampled category into the narrative at
+    sentence boundaries, building the output in a single forward pass so recorded
+    offsets are exact by construction rather than by later adjustment.
     """
-    P = lambda v: (cat, str(v))  # noqa: E731
-
-    if cat == "PERSON":
-        return rng.choice([
-            ["I spoke with a representative named ", P(cust["relative_name"].split()[0]), " who promised to call back."],
-            ["My name is ", P(cust["full_name"]), " and I have banked with them for years."],
-            ["The supervisor, ", P(cust["full_name"].split()[0] + " " + cust["last_name"]), ", refused to escalate it."],
-        ])
-    if cat == "ACCOUNT_ID":
-        return rng.choice([
-            ["The card ending in ", P(txn["last4"]), " is the one that was charged."],
-            ["My account number ", P(f"4{rng.randint(10**10, 10**11 - 1)}"), " has been active since 2019."],
-        ])
-    if cat == "GOV_ID":
-        return ["They asked me to confirm my social security number ",
-                P(f"{rng.randint(100,899)}-{rng.randint(10,99)}-{rng.randint(1000,9999)}"), " over the phone."]
-    if cat == "CONTACT":
-        return rng.choice([
-            ["They can reach me at ", P(cust["phone"]), " during business hours."],
-            ["I sent the documents from ", P(cust["email"]), " and never got a reply."],
-            ["My mailing address is ", P(f"{cust['street']}, {cust['city']}, {cust['state']} {cust['zip']}"), "."],
-        ])
-    if cat == "CASE_REF":
-        return ["I was given case number ", P(f"{rng.randint(10**6, 10**7 - 1)}"), " and told to wait."]
-    if cat == "RELATIONSHIP":
-        return rng.choice([
-            ["My ", P(cust["relationship_type"]), " opened this account without telling me."],
-            ["I had to ask my ", P(cust["relationship_type"]), " to help me read the statement."],
-        ])
-    if cat == "LOCATION_FINE":
-        return rng.choice([
-            ["I went into the ", P(f"{cust['city']}"), " branch to sort it out in person."],
-            ["The nearest office is in ", P(f"{cust['city']}, {cust['state']}"), " and it was closed."],
-        ])
-    if cat == "EMPLOYER":
-        return ["I have worked at ", P(cust["employer"]), " for eleven years and my pay is direct deposited."]
-    if cat == "LIFE_EVENT":
-        return ["This started right after ", P(cust["life_event"]), " and I could not keep up."]
-    if cat == "PROTECTED_ATTR":
-        return ["I am a ", P(cust["protected_attr"]), " and I felt they took advantage of that."]
-    if cat == "HEALTH":
-        return ["The account was opened to pay for ", P(cust["health_procedure"]), " which I could not afford outright."]
-    if cat == "ORG_THIRD_PARTY":
-        return ["I also contacted ", P(cust["third_party_bank"]), " to see if they could help."]
-    if cat == "AMOUNT":
-        return rng.choice([
-            ["There is a charge of ", P(f"${txn['amount']:.2f}"), " that I never authorised."],
-            ["They took ", P(f"${txn['amount']:.2f}"), " out without any notice."],
-        ])
-    if cat == "DATE":
-        return ["This happened on ", P(fmt_date(txn["txn_date"], rng)), " and I reported it the same week."]
-    if cat == "MERCHANT":
-        return ["The charge shows as ", P(txn["merchant_name"]), " which I do not recognise."]
-    if cat == "TEMPORAL":
-        return ["It was a ", P(rng.choice(WEEKDAYS)), " and I called at ", ("TEMPORAL", rng.choice(TIMES)), "."]
-    raise ValueError(cat)
-
-
-SENT_SPLIT = re.compile(r"(?<=[.!?])\s+")
-
-
-def inject(narrative: str, cats: list[str], cust: dict, txn: dict, rng: random.Random):
-    """
-    Splice one carrier sentence per category into the narrative at sentence
-    boundaries, building the output in a single forward pass so recorded offsets
-    are exact by construction rather than by later adjustment.
-    """
-    sentences = [s for s in SENT_SPLIT.split(narrative.strip()) if s]
-    if not sentences:
-        sentences = [narrative.strip()]
-
+    sentences = [s for s in SENT_SPLIT.split(narrative.strip()) if s] or [narrative.strip()]
     slots = sorted(rng.sample(range(len(sentences) + 1), min(len(cats), len(sentences) + 1)))
-    cats = cats[: len(slots)]
     plan: dict[int, list[str]] = {}
-    for slot, cat in zip(slots, cats):
+    for slot, cat in zip(slots, cats[: len(slots)]):
         plan.setdefault(slot, []).append(cat)
 
     out: list[str] = []
@@ -190,7 +165,8 @@ def inject(narrative: str, cats: list[str], cust: dict, txn: dict, rng: random.R
 
     for i in range(len(sentences) + 1):
         for cat in plan.get(i, []):
-            for part in build_sentence(cat, cust, txn, rng):
+            tmpl = rng.choice(templates[cat])
+            for part in render(tmpl, cat, cust, txn, rng):
                 if isinstance(part, tuple):
                     c, value = part
                     spans.append({
@@ -207,19 +183,13 @@ def inject(narrative: str, cats: list[str], cust: dict, txn: dict, rng: random.R
                 emit(" ")
 
     text = "".join(out)
-    # Assert the labels really are facts: every recorded span must contain
-    # exactly the value we claim to have written there.
     for s in spans:
         assert text[s["start"] : s["end"]] == s["value"], "offset drift — labels would be wrong"
     return text, spans
 
 
-def sample_categories(dist: dict[str, float], k: int, rng: random.Random) -> list[str]:
-    cats, weights = list(dist), list(dist.values())
-    return rng.choices(cats, weights=weights, k=k)
-
-
-def build(name: str, dist: dict[str, float], narratives, customers, txn_by_cust, rng):
+def build(name, dist, templates, narratives, customers, txn_by_cust, seed):
+    rng = random.Random(seed)
     rows = []
     for i, narrative in enumerate(narratives):
         cust = customers[i % len(customers)]
@@ -228,37 +198,55 @@ def build(name: str, dist: dict[str, float], narratives, customers, txn_by_cust,
             continue
         txn = dict(rng.choice(txns))
         txn["last4"] = f"{rng.randint(0, 9999):04d}"
-        k = rng.randint(*SPANS_PER_NARRATIVE)
-        cats = sample_categories(dist, k, rng)
-        text, spans = inject(narrative, cats, cust, txn, rng)
-        if not spans:
-            continue
-        rows.append({
-            "doc_id": f"{name}-{i:05d}",
-            "customer_id": cust["customer_id"],
-            "txn_id": txn["txn_id"],
-            "text": text,
-            "spans": spans,
-            "n_spans": len(spans),
-        })
+        cats = rng.choices(list(dist), weights=list(dist.values()), k=rng.randint(*SPANS_PER_NARRATIVE))
+        text, spans = inject(narrative, cats, templates, cust, txn, rng)
+        if spans:
+            rows.append({
+                "doc_id": f"{name}-{i:05d}", "customer_id": cust["customer_id"],
+                "txn_id": txn["txn_id"], "text": text, "spans": spans, "n_spans": len(spans),
+            })
     return pd.DataFrame(rows)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=N_NARRATIVES)
+    ap.add_argument("--train", type=int, default=N_TRAIN)
+    ap.add_argument("--eval", type=int, default=N_EVAL)
     args = ap.parse_args()
 
     for p in (NARRATIVES, SYN / "customers.parquet", SYN / "transactions.parquet"):
         if not p.exists():
-            print(f"missing {p}")
+            print(f"missing {p} — run scripts/m2_transactions.py first")
             return 1
 
-    rng = random.Random(SEED)
+    train_t, eval_t = split_templates()
+
     df = pd.read_parquet(NARRATIVES, columns=["narrative"])
     clean = df[~df["narrative"].str.contains(MARKER, regex=True, na=False)]
     clean = clean[clean["narrative"].str.split().str.len().between(40, 600)]
-    narratives = clean.sample(n=min(args.n, len(clean)), random_state=SEED)["narrative"].tolist()
+
+    # DEDUPLICATE BEFORE SPLITTING. 17.3% of clean narratives are exact
+    # duplicates — form-letter complaints submitted en masse, one of which
+    # appears 181 times. Splitting without this puts identical text in both
+    # train and eval, and the model scores on memorised documents. This was
+    # caught by the leak assertion below rather than by inspection, which is
+    # the argument for asserting it rather than trusting the split.
+    before = len(clean)
+    clean = clean.drop_duplicates(subset="narrative")
+    print(f"deduplicated: {before:,} -> {len(clean):,} narratives "
+          f"({before - len(clean):,} exact duplicates removed, {100*(before-len(clean))/before:.1f}%)")
+
+    pool = clean.sample(frac=1.0, random_state=SEED)["narrative"].tolist()
+
+    need = args.train + args.eval
+    if len(pool) < need:
+        print(f"only {len(pool):,} clean narratives, need {need:,}")
+        return 1
+
+    # NARRATIVE SPLIT — done before anything is generated, so it cannot leak.
+    train_pool = pool[: args.train]
+    eval_pool = pool[args.train : args.train + args.eval]
+    assert not (set(train_pool) & set(eval_pool)), "narrative leak"
 
     customers = pd.read_parquet(SYN / "customers.parquet").to_dict("records")
     tdf = pd.read_parquet(SYN / "transactions.parquet")
@@ -266,55 +254,64 @@ def main() -> int:
     for r in tdf.to_dict("records"):
         txn_by_cust.setdefault(r["customer_id"], []).append(r)
 
-    print(f"clean narratives available: {len(clean):,}  |  using {len(narratives):,}\n")
+    print(f"clean narratives: {len(clean):,} | train {len(train_pool):,} | eval {len(eval_pool):,}\n")
+
+    sets = [
+        # name,                dist,        templates, pool,       seed
+        ("train",              STRATIFIED,  train_t,   train_pool, SEED),
+        ("natural",            NATURAL,     eval_t,    eval_pool,  SEED + 1),
+        ("stratified",         STRATIFIED,  eval_t,    eval_pool,  SEED + 2),
+        # Control: same eval narratives, but TRAIN templates. Difference against
+        # `stratified` isolates template memorisation from everything else.
+        ("seen_templates",     STRATIFIED,  train_t,   eval_pool,  SEED + 2),
+    ]
 
     summaries = []
-    for name, dist in [("natural", NATURAL), ("stratified", STRATIFIED)]:
-        out = build(name, dist, narratives, customers, txn_by_cust, random.Random(SEED))
+    for name, dist, tmpl, npool, seed in sets:
+        out = build(name, dist, tmpl, npool, customers, txn_by_cust, seed)
         out.to_parquet(SYN / f"injected_{name}.parquet", index=False)
-
-        counts = {}
+        counts: dict[str, int] = {}
         for spans in out["spans"]:
             for s in spans:
                 counts[s["category"]] = counts.get(s["category"], 0) + 1
-        total = sum(counts.values())
-        uniq_cust = out["customer_id"].nunique()
-        summaries.append((name, out, counts, total, uniq_cust))
-        print(f"{name:<11} {len(out):,} narratives, {total:,} spans, {uniq_cust:,} distinct customers")
+        summaries.append((name, out, counts, sum(counts.values())))
+        print(f"  {name:<16} {len(out):>6,} narratives  {sum(counts.values()):>7,} spans")
 
-    L = ["M2 — injected evaluation sets", "=" * 62, "",
-         f"seed: {SEED}   |   per decision 004, two distributions", ""]
-    for name, out, counts, total, uniq in summaries:
-        L += [
-            "-" * 62,
-            f"{name.upper()}",
-            "",
-            f"  narratives          {len(out):>8,}",
-            f"  injected spans      {total:>8,}",
-            f"  spans/narrative     {total/max(len(out),1):>8.1f}",
-            f"  distinct customers  {uniq:>8,}",
-            "",
-            f"  {'category':<18} {'tier':>4} {'spans':>8} {'share':>8}",
-        ]
-        for c, n in sorted(counts.items(), key=lambda kv: -kv[1]):
-            L.append(f"  {c:<18} {TIER[c]:>4} {n:>8,} {100*n/max(total,1):>7.1f}%")
+    L = ["M2 — injected sets", "=" * 64, "",
+         f"seed: {SEED}   |   two distributions (decision 004), disjoint templates (decision 006)",
+         "",
+         "LEAK CONTROLS",
+         "-" * 64,
+         f"  narrative pools are disjoint: {len(train_pool):,} train vs {len(eval_pool):,} eval",
+         "  carrier templates are disjoint: 4 per category for training,",
+         "  2 per category held out for evaluation, asserted non-overlapping.",
+         "",
+         "  `seen_templates` is a control set: the SAME eval narratives rendered",
+         "  with TRAINING templates. A model scoring well there and badly on",
+         "  `stratified` has memorised phrasing, not learned personal information.",
+         "  That gap is a headline diagnostic at M3, not a footnote.",
+         ""]
+    for name, out, counts, total in summaries:
         by_tier: dict[int, int] = {}
         for c, n in counts.items():
             by_tier[TIER[c]] = by_tier.get(TIER[c], 0) + n
+        L += ["-" * 64, f"{name.upper()}", "",
+              f"  narratives {len(out):>7,}   spans {total:>7,}   spans/narrative {total/max(len(out),1):>4.1f}",
+              f"  tier 1 {100*by_tier.get(1,0)/max(total,1):>5.1f}%   "
+              f"tier 2 {100*by_tier.get(2,0)/max(total,1):>5.1f}%   "
+              f"tier 3 {100*by_tier.get(3,0)/max(total,1):>5.1f}%",
+              ""]
+        for c, n in sorted(counts.items(), key=lambda kv: -kv[1]):
+            L.append(f"    {c:<18} tier {TIER[c]}  {n:>7,}  {100*n/max(total,1):>5.1f}%")
         L.append("")
-        for t in (1, 2, 3):
-            L.append(f"  tier {t}: {by_tier.get(t,0):>7,}  ({100*by_tier.get(t,0)/max(total,1):>5.1f}%)")
-        L.append("")
-    L += [
-        "-" * 62,
-        "Every span above has an exact character offset, recorded when it was",
-        "written. The injector asserts text[start:end] == value for every span,",
-        "so an offset bug fails the build rather than silently corrupting the",
-        "labels every downstream number depends on.",
-    ]
+    L += ["-" * 64,
+          "Every span above has an exact character offset recorded when it was",
+          "written. The injector asserts text[start:end] == value for every span,",
+          "so an offset bug fails the build rather than silently corrupting the",
+          "labels every downstream number depends on."]
     out_txt = "\n".join(L)
     (RESULTS / "m2_injection_summary.txt").write_text(out_txt + "\n")
-    print("\n" + out_txt)
+    print("\n" + out_txt[: out_txt.index("NATURAL")] if "NATURAL" in out_txt else out_txt)
     return 0
 
 
