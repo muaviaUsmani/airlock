@@ -21,10 +21,18 @@ removed the personal information. Airlock builds a synthetic transaction databas
 *attacks its own output* — taking the redacted text and trying to find the one customer it
 belongs to. That attack is the headline result.
 
-> **Status: M0 in progress.** No results yet. The three numbers below are the shape of the
-> claim, not the claim. They are filled in only when a committed script produces them, per
-> [the constitution](.specify/memory/constitution.md). Numbers that cannot be regenerated do
+> **Status: M0 complete. M1 next.** The corpus is characterised and
+> [DEFINITIONS.md](DEFINITIONS.md) is locked. The three headline numbers below are the *shape*
+> of the claim, not the claim — they are filled in only when a committed script produces them,
+> per [the constitution](.specify/memory/constitution.md). Numbers that cannot be regenerated do
 > not get published here.
+>
+> **What M0 already found, before any model exists:** the CFPB's human redactors leave an intact
+> dollar amount in **44.2%** of narratives. An exact transaction amount is one of the strongest
+> join keys there is against a transaction database. The text has been scrubbed to a published
+> standard by a trained person, and it still carries the field an attacker would most want —
+> which is the entire argument for measuring re-identification rather than counting names.
+> Details in [docs/02-data.md](docs/02-data.md).
 
 ---
 
@@ -171,7 +179,7 @@ silently resolved.
 
 | | milestone | done when | status |
 |---|---|---|---|
-| **M0** | Characterise the corpus | `DEFINITIONS.md` exists, corpus statistics committed | in progress |
+| **M0** | Characterise the corpus | `DEFINITIONS.md` exists, corpus statistics committed | **done** |
 | **M1** | Measure the baselines | Published table of what free tools already achieve | not started |
 | **M2** | Injection harness + adversary | N narratives with known PII positions, each mapped to one synthetic customer | not started |
 | **M3** | The model | Beats M1 on contextual categories, or reports that it does not | not started |
