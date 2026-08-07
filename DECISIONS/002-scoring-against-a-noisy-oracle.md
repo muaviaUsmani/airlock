@@ -1,7 +1,7 @@
 # 002 — How to score recall against an oracle that over-redacts
 
 **Date:** 2026-08-06
-**Status:** Decided
+**Status:** Superseded in part by [decision 003](003-no-hand-labelling.md) — option B (hand-labelling) is withdrawn, and with it the accuracy ranking. The problem statement and the description of options A, C and D still stand.
 **Blocks:** `DEFINITIONS.md`, M1 (baselines), M3 (the model)
 **Fork source:** Not in the brief. Surfaced by M0 measurement, per the brief's instruction that
 unlisted forks be surfaced rather than picked.

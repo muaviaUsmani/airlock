@@ -123,15 +123,24 @@ Three consequences, all intended:
 |---|---|---|
 | **Recall** | matched true spans ÷ all true spans | CFPB `XXXX` markers — noisy, see below |
 | **Precision** | matched predicted spans ÷ all predicted spans | Injection (M2) — exact, because we wrote it |
+| **Category accuracy** | correct category ÷ matched spans | Injection (M2) — exact |
 
 Recall and precision come from **different oracles on purpose**. The markers say where PII was
 but not what, and cannot say whether something they left alone was safe — so they cannot carry
 precision. Injected PII has positions we recorded, so it can.
 
-**Recall against raw markers is a lower bound, not an estimate.** Per
-[decision 002](DECISIONS/002-scoring-against-a-noisy-oracle.md), four scoring conventions are
-computed and ranked against a hand-labelled gold set. Every recall figure in this repository
-names which convention produced it.
+**All exact ground truth in this project is generated, never annotated.** Injection into the
+40,319 narratives that carry no markers supplies both halves: the positives are what we inserted
+and wrote down, and the negatives are text a CFPB redactor already passed as clean. No human and
+no model judges anything, which is what the brief requires of the headline numbers. See
+[decision 003](DECISIONS/003-no-hand-labelling.md).
+
+**Recall against raw markers is a lower bound with an unmeasured gap.** The oracle over-redacts,
+so some markers are not PII and a model is penalised for correctly ignoring them. Per
+[decision 003](DECISIONS/003-no-hand-labelling.md) there is no hand-labelled gold set, so the
+size of that gap is not measurable — it is bounded below by mechanical rules and reported as a
+floor. Three scoring conventions are computed and published side by side, not ranked. Every
+recall figure in this repository names which convention produced it.
 
 ### Category-level correctness
 
@@ -194,5 +203,17 @@ the attack finds nothing are successes for the redactor and stay in the denomina
 
 ## Amendments
 
-None. Any change is appended here with its date and its reason, and the reason has to say what
-was learned that the original definition could not accommodate.
+**2026-08-06 — no hand-labelled gold set.** Reason:
+[decision 003](DECISIONS/003-no-hand-labelling.md).
+
+What the original could not accommodate: as first written, section 2 relied on a hand-labelled
+gold set to rank scoring conventions by accuracy. That contradicted the brief's own requirement
+that the headline numbers need *"no human or a model to judge anything"*, which the brief had
+already satisfied by designing injection as the exact oracle.
+
+What changed: exact ground truth now comes entirely from injection. Recall against `XXXX`
+markers is a lower bound whose gap is bounded mechanically rather than measured, and the three
+scoring conventions are published side by side instead of ranked.
+
+Amended the same day it was locked, before any method was measured against it — so no result
+in this repository was produced under the superseded definition.
