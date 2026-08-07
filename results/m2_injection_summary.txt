@@ -1,0 +1,70 @@
+M2 — injected evaluation sets
+==============================================================
+
+seed: 20260806   |   per decision 004, two distributions
+
+--------------------------------------------------------------
+NATURAL
+
+  narratives             4,000
+  injected spans        16,110
+  spans/narrative          4.0
+  distinct customers     4,000
+
+  category           tier    spans    share
+  DATE                  3   11,013    68.4%
+  TEMPORAL              3    1,156     7.2%
+  ACCOUNT_ID            1    1,107     6.9%
+  ORG_THIRD_PARTY       2      904     5.6%
+  PERSON                1      694     4.3%
+  AMOUNT                3      364     2.3%
+  CASE_REF              1      282     1.8%
+  CONTACT               1      186     1.2%
+  LOCATION_FINE         2      183     1.1%
+  PROTECTED_ATTR        2       90     0.6%
+  MERCHANT              3       62     0.4%
+  EMPLOYER              2       21     0.1%
+  LIFE_EVENT            2       17     0.1%
+  RELATIONSHIP          2       15     0.1%
+  GOV_ID                1       12     0.1%
+  HEALTH                2        4     0.0%
+
+  tier 1:   2,281  ( 14.2%)
+  tier 2:   1,234  (  7.7%)
+  tier 3:  12,595  ( 78.2%)
+
+--------------------------------------------------------------
+STRATIFIED
+
+  narratives             4,000
+  injected spans        16,582
+  spans/narrative          4.1
+  distinct customers     4,000
+
+  category           tier    spans    share
+  TEMPORAL              3    1,998    12.0%
+  ACCOUNT_ID            1    1,027     6.2%
+  PERSON                1    1,024     6.2%
+  AMOUNT                3    1,021     6.2%
+  CASE_REF              1      998     6.0%
+  ORG_THIRD_PARTY       2      983     5.9%
+  PROTECTED_ATTR        2      978     5.9%
+  GOV_ID                1      977     5.9%
+  MERCHANT              3      976     5.9%
+  CONTACT               1      972     5.9%
+  EMPLOYER              2      967     5.8%
+  HEALTH                2      941     5.7%
+  LIFE_EVENT            2      936     5.6%
+  DATE                  3      935     5.6%
+  RELATIONSHIP          2      930     5.6%
+  LOCATION_FINE         2      919     5.5%
+
+  tier 1:   4,998  ( 30.1%)
+  tier 2:   6,654  ( 40.1%)
+  tier 3:   4,930  ( 29.7%)
+
+--------------------------------------------------------------
+Every span above has an exact character offset, recorded when it was
+written. The injector asserts text[start:end] == value for every span,
+so an offset bug fails the build rather than silently corrupting the
+labels every downstream number depends on.

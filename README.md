@@ -21,7 +21,7 @@ removed the personal information. Airlock builds a synthetic transaction databas
 *attacks its own output* — taking the redacted text and trying to find the one customer it
 belongs to. That attack is the headline result.
 
-> **Status: M0 and M1 complete. M2 next.** The corpus is characterised and
+> **Status: M0, M1 and M2 complete. M3 next.** The corpus is characterised and
 > [DEFINITIONS.md](DEFINITIONS.md) is locked. The three headline numbers below are the *shape*
 > of the claim, not the claim — they are filled in only when a committed script produces them,
 > per [the constitution](.specify/memory/constitution.md). Numbers that cannot be regenerated do
@@ -39,6 +39,12 @@ belongs to. That attack is the headline result.
 > redaction marker is letters. No pattern can ever match one. The free labels cannot evaluate
 > pattern-based detection at all, which is why the like-for-like comparison has to happen on
 > injected data. Details in [docs/03-baselines.md](docs/03-baselines.md).
+>
+> **And what M2 found:** in the synthetic transaction database, an exact date identifies nobody
+> (479 customers share one) and a merchant identifies nobody (1,329 do). Put an amount, a date
+> and a merchant together and you reach **99.7% uniqueness**. None of the three is personal
+> information; no PII detector removes any of them. Details in
+> [docs/05-attack.md](docs/05-attack.md).
 
 ---
 

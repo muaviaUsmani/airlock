@@ -46,10 +46,25 @@ m1: $(RESULTS)/m1_baselines.txt  ## M1: what Presidio, spaCy and regex already a
 $(RESULTS)/m1_baselines.txt: $(RESULTS)/m0_marker_stats.txt
 	$(PY) scripts/m1_baselines.py
 
+.PHONY: m2
+m2: $(RESULTS)/m2_injection_summary.txt  ## M2: injection harness and the adversary's database
+
+$(RESULTS)/m2_category_distribution.txt: $(RESULTS)/m0_marker_stats.txt
+	$(PY) scripts/m2_category_distribution.py
+
+$(RESULTS)/m2_synthetic_summary.txt:
+	$(PY) scripts/m2_transactions.py
+
+# The injector depends on the customers existing first: injected values are drawn
+# FROM a customer's record, or the narrative describes nobody and M4 has nothing
+# to find.
+$(RESULTS)/m2_injection_summary.txt: $(RESULTS)/m2_category_distribution.txt $(RESULTS)/m2_synthetic_summary.txt
+	$(PY) scripts/m2_inject.py
+
 .PHONY: repro
-repro: m0 m1  ## Regenerate every number in the README from scratch
+repro: m0 m1 m2  ## Regenerate every number in the README from scratch
 	@echo
-	@echo "Milestones beyond M1 are not built yet."
+	@echo "Milestones beyond M2 are not built yet."
 
 .PHONY: clean
 clean:  ## Remove generated results (keeps the downloaded corpus)
