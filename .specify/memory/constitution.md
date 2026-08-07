@@ -24,6 +24,30 @@ an unlisted fork is surfaced, not picked.
 A silently resolved fork invalidates the result that depends on it. This is the specific failure
 mode the whole working method exists to prevent.
 
+**Standing instruction from the human, given 2026-08-06 and applying to all forks unless
+overridden for a specific one:**
+
+> *Build every branch. Publish the comparison. Do not pick one and discard the rest.*
+
+The reasoning behind it is that this portfolio is analytical in intent — the deliverable is the
+comparison itself, not a single tuned artifact. A fork resolved by choosing one branch throws
+away exactly the evidence a reader needs to judge whether the choice was right.
+
+This changes what "surface the fork" means in practice, and does not remove the obligation:
+
+1. **Forks are still surfaced**, because the human still decides scope, cost, and which branch
+   supplies the headline. A fork resolved by this rule is still written up in `DECISIONS/`.
+2. **Surface anything the rule cannot absorb.** Where branches are not comparable on any common
+   axis, or where building all of them is disproportionate to what the comparison would show,
+   that is itself a fork and it stops the work.
+3. **State the cost before spending it.** Where building every branch is materially expensive —
+   training two models rather than one — the estimate is put to the human before the work
+   starts, not reported afterwards.
+4. **Where branches form a parameterised family rather than a menu, publish the curve.** Two
+   points chosen from a continuum are a weaker answer than the continuum.
+5. **Pre-register how any tunable parameter is selected**, before the comparison runs. A
+   comparison whose parameters are chosen after seeing the results is not a comparison.
+
 ### II. Measure Before Building (NON-NEGOTIABLE)
 
 Baselines are published before the thing that beats them is built. The corpus is characterised
