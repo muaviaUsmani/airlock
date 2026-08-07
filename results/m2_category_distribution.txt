@@ -1,0 +1,89 @@
+M2 — what the markers replaced, estimated from surviving context
+==================================================================
+
+sample:       15,000 marked narratives (seed 20260806)
+marker spans: 119,261 after adjacent-merge
+
+COVERAGE — the number that decides whether this is usable
+------------------------------------------------------------------
+  resolved to a category        55,465  ( 46.5%)
+  left UNKNOWN                  63,796  ( 53.5%)
+  of resolved, NOT_PII           3,224  (  2.7%)
+
+UNKNOWN is not a category. It is a span whose original content the
+surviving context does not determine. It is never guessed at, and the
+300 most common unresolved contexts are written to
+results/m2_unresolved_contexts.csv for inspection.
+
+------------------------------------------------------------------
+DISTRIBUTION OVER RESOLVED PII SPANS
+
+  category           tier     spans   of all   of PII
+  DATE                  3    36,792    30.8%    70.4%
+  ACCOUNT_ID            1     3,665     3.1%     7.0%
+  ORG_THIRD_PARTY       2     3,210     2.7%     6.1%
+  PERSON                1     2,375     2.0%     4.5%
+  TEMPORAL              3     1,984     1.7%     3.8%
+  AMOUNT                3     1,320     1.1%     2.5%
+  CASE_REF              1     1,019     0.9%     2.0%
+  CONTACT               1       575     0.5%     1.1%
+  LOCATION_FINE         2       557     0.5%     1.1%
+  PROTECTED_ATTR        2       326     0.3%     0.6%
+  MERCHANT              3       228     0.2%     0.4%
+  RELATIONSHIP          2        76     0.1%     0.1%
+  GOV_ID                1        36     0.0%     0.1%
+  LIFE_EVENT            2        33     0.0%     0.1%
+  EMPLOYER              2        28     0.0%     0.1%
+  HEALTH                2        17     0.0%     0.0%
+
+  (UNKNOWN)                  63,796    53.5%
+  (NOT_PII)                   3,224     2.7%
+
+------------------------------------------------------------------
+BY TIER (resolved PII spans only)
+
+  tier 1  direct identifiers          7,670   14.7%
+  tier 2  contextual identifiers      4,247    8.1%
+  tier 3  quasi-identifiers          40,324   77.2%
+
+------------------------------------------------------------------
+HOW EACH RESOLUTION WAS MADE  (the trustworthiness diagnostic)
+
+A category resolved by SHAPE labels itself. A category resolvable only
+from context is found only when the context survived. The two are not
+comparable, and mixing them produces a distribution that describes what
+is EASY TO RECOVER rather than what was actually there.
+
+    27,890  DATE via SHAPE
+     8,902  DATE via LEFT context
+     3,224  NOT_PII via right context
+     2,837  ORG_THIRD_PARTY via LEFT context
+     1,984  TEMPORAL via LEFT context
+     1,916  ACCOUNT_ID via RIGHT context
+     1,749  ACCOUNT_ID via LEFT context
+     1,432  PERSON via LEFT context
+     1,320  AMOUNT via LEFT context
+     1,019  CASE_REF via LEFT context
+       943  PERSON via RIGHT context
+       554  CONTACT via LEFT context
+       373  ORG_THIRD_PARTY via RIGHT context
+       326  PROTECTED_ATTR via LEFT context
+
+  DATE resolved by shape:     27,890
+  DATE resolved by context:    8,902
+  -> 75.8% of DATE resolutions come from the marker shape alone.
+
+  DATE is the only category in DEFINITIONS.md whose redaction preserves
+  its own type signature (XX/XX/XXXX). No other category does. That is
+  why DATE dominates the table above, and it is a property of the
+  MEASUREMENT, not of the corpus.
+
+------------------------------------------------------------------
+WAS THE CONTEXT ITSELF REDACTED?
+
+  UNKNOWN spans with another marker in their context window:   65.2%
+  resolved spans with another marker in their context window:  58.4%
+
+  A contributing cause but not the main one — the gap is small. Most
+  unresolved spans sit in surviving prose that simply does not say what
+  was removed.
