@@ -15,119 +15,119 @@ LEAK CONTROLS
   That gap is a headline diagnostic at M3, not a footnote.
 
 ----------------------------------------------------------------
-TRAIN
+TRAIN_RC
 
-  narratives  15,000   spans  61,483   spans/narrative  4.1
-  tier 1  30.4%   tier 2  42.5%   tier 3  27.1%
+  narratives  15,000   spans  59,765   spans/narrative  4.0
+  tier 1  31.3%   tier 2  43.7%   tier 3  25.1%
 
-    TEMPORAL           tier 3    5,617    9.1%
-    LIFE_EVENT         tier 2    3,853    6.3%
-    AMOUNT             tier 3    3,782    6.2%
-    ACCOUNT_ID         tier 1    3,767    6.1%
-    ORG_THIRD_PARTY    tier 2    3,757    6.1%
-    GOV_ID             tier 1    3,754    6.1%
-    RELATIONSHIP       tier 2    3,752    6.1%
-    CONTACT            tier 1    3,747    6.1%
-    LOCATION_FINE      tier 2    3,728    6.1%
-    PERSON             tier 1    3,725    6.1%
-    HEALTH             tier 2    3,720    6.1%
-    EMPLOYER           tier 2    3,696    6.0%
-    CASE_REF           tier 1    3,679    6.0%
-    PROTECTED_ATTR     tier 2    3,652    5.9%
-    DATE               tier 3    3,636    5.9%
-    MERCHANT           tier 3    3,618    5.9%
-
-----------------------------------------------------------------
-NATURAL
-
-  narratives   4,000   spans  16,709   spans/narrative  4.2
-  tier 1  13.9%   tier 2   7.7%   tier 3  78.4%
-
-    DATE               tier 3   11,379   68.1%
-    TEMPORAL           tier 3    1,272    7.6%
-    ACCOUNT_ID         tier 1    1,099    6.6%
-    ORG_THIRD_PARTY    tier 2      966    5.8%
-    PERSON             tier 1      729    4.4%
-    AMOUNT             tier 3      389    2.3%
-    CASE_REF           tier 1      309    1.8%
-    CONTACT            tier 1      179    1.1%
-    LOCATION_FINE      tier 2      178    1.1%
-    PROTECTED_ATTR     tier 2       86    0.5%
-    MERCHANT           tier 3       52    0.3%
-    LIFE_EVENT         tier 2       18    0.1%
-    EMPLOYER           tier 2       16    0.1%
-    GOV_ID             tier 1       14    0.1%
-    RELATIONSHIP       tier 2       13    0.1%
-    HEALTH             tier 2       10    0.1%
+    ACCOUNT_ID         tier 1    3,853    6.4%
+    LIFE_EVENT         tier 2    3,815    6.4%
+    AMOUNT             tier 3    3,808    6.4%
+    HEALTH             tier 2    3,779    6.3%
+    TEMPORAL           tier 3    3,766    6.3%
+    GOV_ID             tier 1    3,765    6.3%
+    EMPLOYER           tier 2    3,756    6.3%
+    LOCATION_FINE      tier 2    3,725    6.2%
+    DATE               tier 3    3,719    6.2%
+    PERSON             tier 1    3,719    6.2%
+    ORG_THIRD_PARTY    tier 2    3,711    6.2%
+    CONTACT            tier 1    3,708    6.2%
+    RELATIONSHIP       tier 2    3,690    6.2%
+    MERCHANT           tier 3    3,686    6.2%
+    CASE_REF           tier 1    3,650    6.1%
+    PROTECTED_ATTR     tier 2    3,615    6.0%
 
 ----------------------------------------------------------------
-NATURAL_V2
+NATURAL_RC
 
-  narratives   4,000   spans  18,700   spans/narrative  4.7
-  tier 1  51.9%   tier 2  28.6%   tier 3  19.5%
+  narratives   4,000   spans  15,980   spans/narrative  4.0
+  tier 1  14.6%   tier 2   8.0%   tier 3  77.4%
 
-    ACCOUNT_ID         tier 1    4,606   24.6%
-    ORG_THIRD_PARTY    tier 2    4,045   21.6%
-    PERSON             tier 1    2,925   15.6%
-    AMOUNT             tier 3    1,449    7.7%
-    DATE               tier 3    1,407    7.5%
-    CASE_REF           tier 1    1,377    7.4%
-    CONTACT            tier 1      716    3.8%
-    LOCATION_FINE      tier 2      692    3.7%
-    MERCHANT           tier 3      497    2.7%
-    PROTECTED_ATTR     tier 2      398    2.1%
-    TEMPORAL           tier 3      300    1.6%
-    GOV_ID             tier 1       74    0.4%
-    EMPLOYER           tier 2       62    0.3%
-    LIFE_EVENT         tier 2       61    0.3%
-    RELATIONSHIP       tier 2       57    0.3%
-    HEALTH             tier 2       34    0.2%
-
-----------------------------------------------------------------
-STRATIFIED
-
-  narratives   4,000   spans  17,006   spans/narrative  4.3
-  tier 1  29.3%   tier 2  41.0%   tier 3  29.8%
-
-    TEMPORAL           tier 3    2,052   12.1%
-    PROTECTED_ATTR     tier 2    1,044    6.1%
-    ACCOUNT_ID         tier 1    1,034    6.1%
-    CASE_REF           tier 1    1,027    6.0%
-    RELATIONSHIP       tier 2    1,021    6.0%
-    LIFE_EVENT         tier 2    1,016    6.0%
-    DATE               tier 3    1,014    6.0%
-    HEALTH             tier 2    1,003    5.9%
-    MERCHANT           tier 3    1,002    5.9%
-    AMOUNT             tier 3      998    5.9%
-    CONTACT            tier 1      987    5.8%
-    LOCATION_FINE      tier 2      981    5.8%
-    GOV_ID             tier 1      977    5.7%
-    EMPLOYER           tier 2      960    5.6%
-    PERSON             tier 1      951    5.6%
-    ORG_THIRD_PARTY    tier 2      939    5.5%
+    DATE               tier 3   11,289   70.6%
+    ACCOUNT_ID         tier 1    1,087    6.8%
+    ORG_THIRD_PARTY    tier 2      946    5.9%
+    PERSON             tier 1      721    4.5%
+    TEMPORAL           tier 3      564    3.5%
+    AMOUNT             tier 3      437    2.7%
+    CASE_REF           tier 1      312    2.0%
+    CONTACT            tier 1      195    1.2%
+    LOCATION_FINE      tier 2      163    1.0%
+    PROTECTED_ATTR     tier 2       98    0.6%
+    MERCHANT           tier 3       75    0.5%
+    RELATIONSHIP       tier 2       22    0.1%
+    EMPLOYER           tier 2       19    0.1%
+    GOV_ID             tier 1       19    0.1%
+    HEALTH             tier 2       17    0.1%
+    LIFE_EVENT         tier 2       16    0.1%
 
 ----------------------------------------------------------------
-SEEN_TEMPLATES
+NATURAL_V2_RC
 
-  narratives   4,000   spans  16,491   spans/narrative  4.1
-  tier 1  30.1%   tier 2  42.4%   tier 3  27.5%
+  narratives   4,000   spans  18,486   spans/narrative  4.6
+  tier 1  51.8%   tier 2  29.4%   tier 3  18.8%
 
-    TEMPORAL           tier 3    1,542    9.4%
-    RELATIONSHIP       tier 2    1,049    6.4%
-    PERSON             tier 1    1,034    6.3%
-    EMPLOYER           tier 2    1,029    6.2%
-    PROTECTED_ATTR     tier 2    1,017    6.2%
-    ACCOUNT_ID         tier 1    1,015    6.2%
-    AMOUNT             tier 3    1,014    6.1%
-    MERCHANT           tier 3    1,009    6.1%
-    CASE_REF           tier 1    1,007    6.1%
-    HEALTH             tier 2      989    6.0%
-    DATE               tier 3      976    5.9%
-    LIFE_EVENT         tier 2      975    5.9%
-    LOCATION_FINE      tier 2      970    5.9%
-    CONTACT            tier 1      960    5.8%
-    ORG_THIRD_PARTY    tier 2      957    5.8%
-    GOV_ID             tier 1      948    5.7%
+    ACCOUNT_ID         tier 1    4,421   23.9%
+    ORG_THIRD_PARTY    tier 2    4,086   22.1%
+    PERSON             tier 1    3,056   16.5%
+    AMOUNT             tier 3    1,451    7.8%
+    DATE               tier 3    1,393    7.5%
+    CASE_REF           tier 1    1,295    7.0%
+    LOCATION_FINE      tier 2      736    4.0%
+    CONTACT            tier 1      729    3.9%
+    MERCHANT           tier 3      464    2.5%
+    PROTECTED_ATTR     tier 2      379    2.1%
+    TEMPORAL           tier 3      162    0.9%
+    LIFE_EVENT         tier 2       74    0.4%
+    EMPLOYER           tier 2       73    0.4%
+    GOV_ID             tier 1       71    0.4%
+    RELATIONSHIP       tier 2       63    0.3%
+    HEALTH             tier 2       33    0.2%
+
+----------------------------------------------------------------
+STRATIFIED_RC
+
+  narratives   4,000   spans  15,969   spans/narrative  4.0
+  tier 1  30.9%   tier 2  43.0%   tier 3  26.1%
+
+    DATE               tier 3    1,080    6.8%
+    AMOUNT             tier 3    1,052    6.6%
+    TEMPORAL           tier 3    1,042    6.5%
+    EMPLOYER           tier 2    1,028    6.4%
+    CASE_REF           tier 1    1,022    6.4%
+    PROTECTED_ATTR     tier 2    1,004    6.3%
+    MERCHANT           tier 3    1,000    6.3%
+    RELATIONSHIP       tier 2      991    6.2%
+    GOV_ID             tier 1      988    6.2%
+    HEALTH             tier 2      984    6.2%
+    CONTACT            tier 1      983    6.2%
+    PERSON             tier 1      982    6.1%
+    LOCATION_FINE      tier 2      967    6.1%
+    LIFE_EVENT         tier 2      959    6.0%
+    ACCOUNT_ID         tier 1      956    6.0%
+    ORG_THIRD_PARTY    tier 2      931    5.8%
+
+----------------------------------------------------------------
+SEEN_TEMPLATES_RC
+
+  narratives   4,000   spans  15,864   spans/narrative  4.0
+  tier 1  31.3%   tier 2  43.7%   tier 3  25.0%
+
+    LIFE_EVENT         tier 2    1,068    6.7%
+    CONTACT            tier 1    1,027    6.5%
+    CASE_REF           tier 1    1,020    6.4%
+    GOV_ID             tier 1    1,018    6.4%
+    DATE               tier 3    1,009    6.4%
+    EMPLOYER           tier 2    1,006    6.3%
+    TEMPORAL           tier 3    1,000    6.3%
+    PERSON             tier 1      993    6.3%
+    MERCHANT           tier 3      984    6.2%
+    PROTECTED_ATTR     tier 2      979    6.2%
+    LOCATION_FINE      tier 2      979    6.2%
+    HEALTH             tier 2      978    6.2%
+    ORG_THIRD_PARTY    tier 2      970    6.1%
+    AMOUNT             tier 3      968    6.1%
+    RELATIONSHIP       tier 2      958    6.0%
+    ACCOUNT_ID         tier 1      907    5.7%
 
 ----------------------------------------------------------------
 Every span above has an exact character offset recorded when it was

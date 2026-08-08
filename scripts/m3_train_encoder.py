@@ -134,6 +134,8 @@ def main() -> int:
     ap.add_argument("--batch", type=int, default=BATCH)
     ap.add_argument("--limit", type=int, default=0, help="debug: cap training rows")
     ap.add_argument("--model", default=BASE_MODEL)
+    ap.add_argument("--train-set", default="train", help="injected_<name>.parquet to train on")
+    ap.add_argument("--out", default="airlock-encoder", help="model directory name")
     args = ap.parse_args()
 
     from transformers import (AutoModelForTokenClassification, AutoTokenizer,
@@ -142,7 +144,7 @@ def main() -> int:
     torch.manual_seed(SEED)
     np.random.seed(SEED)
 
-    train_path = SYN / "injected_train.parquet"
+    train_path = SYN / f"injected_{args.train_set}.parquet"
     if not train_path.exists():
         print(f"missing {train_path} — run scripts/m2_inject.py first")
         return 1
@@ -227,7 +229,7 @@ def main() -> int:
         # interrupted, or that turns out to need fewer epochs than requested,
         # leaves nothing usable behind — and on this hardware an epoch is over
         # two hours, so that is an expensive thing to discover late.
-        ckpt = MODELS / "airlock-encoder"
+        ckpt = MODELS / args.out
         ckpt.mkdir(parents=True, exist_ok=True)
         model.save_pretrained(ckpt)
         tok.save_pretrained(ckpt)
@@ -236,7 +238,7 @@ def main() -> int:
         print(f"    checkpoint saved after epoch {epoch+1}", flush=True)
 
     total_min = (time.time() - t_start) / 60
-    out_dir = MODELS / "airlock-encoder"
+    out_dir = MODELS / args.out
     out_dir.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(out_dir)
     tok.save_pretrained(out_dir)
@@ -247,7 +249,7 @@ def main() -> int:
             f"model on disk        {size_mb:.0f} MB",
             f"saved to             {out_dir.relative_to(ROOT)}"]
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "m3_train_log.txt").write_text("\n".join(log) + "\n")
+    (RESULTS / f"m3_train_log_{args.out}.txt").write_text("\n".join(log) + "\n")
     print("\n".join(log[-4:]))
     return 0
 

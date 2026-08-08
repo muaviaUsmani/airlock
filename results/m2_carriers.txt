@@ -1,0 +1,85 @@
+M2 v2 — carrier sentences mined from the corpus
+====================================================================
+
+narratives scanned: 60,000   seed 20260806
+
+Real sentences real customers wrote, with the redacted span turned
+into a slot. The label stays exact — we still choose the value and
+record where we put it — but the surrounding prose is the corpus's.
+
+Replaces six hand-written templates per category, all in one register,
+which DECISIONS/008 identified as the reason the encoder learned
+carrier contexts instead of entity types.
+
+  category              train     eval   usable?
+  PERSON                1,983      941       yes
+  ACCOUNT_ID            2,535    1,056       yes
+  GOV_ID                    9        2        NO
+  CONTACT                 310      134       yes
+  CASE_REF                659      257       yes
+  RELATIONSHIP             64       35       yes
+  LOCATION_FINE           393      156       yes
+  EMPLOYER                 28       12       yes
+  LIFE_EVENT               29       16       yes
+  PROTECTED_ATTR          375      127       yes
+  HEALTH                   13        6        NO
+  ORG_THIRD_PARTY       2,899    1,301       yes
+  AMOUNT                  755      353       yes
+  DATE                  4,000    4,000       yes
+  MERCHANT                 84       45       yes
+  TEMPORAL              1,045      398       yes
+
+--------------------------------------------------------------------
+TEMPLATE STRINGS REACHING BOTH SIDES OF THE SPLIT
+
+Splitting by source narrative does not make template STRINGS disjoint:
+the same sentence recurs across narratives. Removed from the
+evaluation side so held-out means unseen.
+
+  DATE                  110 removed from eval
+  PERSON                 15 removed from eval
+  ACCOUNT_ID              7 removed from eval
+  ORG_THIRD_PARTY         6 removed from eval
+  TEMPORAL                5 removed from eval
+  CASE_REF                4 removed from eval
+  PROTECTED_ATTR          3 removed from eval
+  CONTACT                 3 removed from eval
+  AMOUNT                  2 removed from eval
+  RELATIONSHIP            2 removed from eval
+
+usable categories: 14 of 16
+
+A category needs >=20 training and >=5 evaluation carriers to be
+usable. Those below stay on the hand-written templates, and every
+results table says which category came from which source — otherwise
+the comparison would be confounded by the thing it is measuring.
+
+--------------------------------------------------------------------
+SENTENCES REJECTED, AND WHY
+
+  not exactly one marker         494,003
+  length                          83,032
+  category not estimable          79,262
+  formatting artefact             11,318
+  leftover marker                    327
+
+'not exactly one marker' dominates because CFPB scrubbing is dense —
+most sentences carrying personal information carry several redactions.
+Those are unusable: a template with a leftover XXXX would inject the
+'XXXX -> redact' shortcut straight into the training data.
+
+--------------------------------------------------------------------
+SAMPLES
+
+  ACCOUNT_ID:
+    I requested Citibank to remove fraudulent charges on account [[account_num]].
+  AMOUNT:
+    I still have no energy now to check all the charges, but tried my best to pay off $ [[amount_bare]] balance th
+  CASE_REF:
+    In regards to Case number : [[case_ref]].
+  CONTACT:
+    I then sent a email to [[email]], I received a packet in the mail with some transaction history.
+  DATE:
+    As of [[date]], RESPONDENTS have chosen to ignore my request.
+  EMPLOYER:
+    I work at [[employer]] so I was checking to see if any of my coworkers had seen it.

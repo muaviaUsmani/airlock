@@ -63,7 +63,37 @@ from pathlib import Path
 
 import pandas as pd
 
+import json as _json
+
 from m2_templates import CATEGORIES, split as split_templates
+
+
+def load_templates(use_carriers: bool):
+    """
+    Return (train_templates, eval_templates).
+
+    With use_carriers, carrier sentences MINED FROM THE CORPUS replace the
+    hand-written ones (DECISIONS/008 — the encoder learned our register, not the
+    entity types). Categories with too few mined carriers keep the hand-written
+    templates, and which source each category used is printed, because a silent
+    mix would confound the very comparison this switch exists to make.
+    """
+    hand_train, hand_eval = split_templates()
+    if not use_carriers:
+        return hand_train, hand_eval, {c: "hand" for c in hand_train}
+
+    path = SYN / "carriers.json"
+    if not path.exists():
+        raise SystemExit(f"missing {path} — run scripts/m2_mine_carriers.py first")
+    mined = _json.loads(path.read_text())
+    train, evl, source = {}, {}, {}
+    for c in hand_train:
+        if c in mined["train"] and c in mined["eval"]:
+            train[c], evl[c], source[c] = mined["train"][c], mined["eval"][c], "mined"
+        else:
+            train[c], evl[c], source[c] = hand_train[c], hand_eval[c], "hand"
+        assert not (set(train[c]) & set(evl[c])), f"template leak in {c}"
+    return train, evl, source
 
 ROOT = Path(__file__).resolve().parents[1]
 SYN = ROOT / "data" / "synthetic"
@@ -133,6 +163,7 @@ def resolve(field: str, cust: dict, txn: dict, rng: random.Random) -> str:
         "health": cust["health_procedure"],
         "bank": cust["third_party_bank"],
         "amount": f"${txn['amount']:.2f}",
+        "amount_bare": f"{txn['amount']:.2f}",
         "date": rng.choice([f"{int(m)}/{int(d)}/{y}", f"{m}/{d}/{y}", f"{int(m)}/{int(d)}/{y[2:]}"]),
         "merchant": txn["merchant_name"],
         "weekday": rng.choice(WEEKDAYS),
@@ -231,6 +262,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--train", type=int, default=N_TRAIN)
     ap.add_argument("--eval", type=int, default=N_EVAL)
+    ap.add_argument("--carriers", action="store_true",
+                    help="use carrier sentences mined from the corpus (decision 008)")
+    ap.add_argument("--suffix", default="", help="suffix for output set names")
     args = ap.parse_args()
 
     for p in (NARRATIVES, SYN / "customers.parquet", SYN / "transactions.parquet"):
@@ -238,7 +272,13 @@ def main() -> int:
             print(f"missing {p} — run scripts/m2_transactions.py first")
             return 1
 
-    train_t, eval_t = split_templates()
+    train_t, eval_t, source = load_templates(args.carriers)
+    n_mined = sum(1 for v in source.values() if v == "mined")
+    print(f"templates: {n_mined} categories from mined corpus carriers, "
+          f"{len(source)-n_mined} from hand-written")
+    for c, src in sorted(source.items()):
+        if src == "hand" and args.carriers:
+            print(f"    {c}: too few mined carriers, using hand-written")
 
     df = pd.read_parquet(NARRATIVES, columns=["narrative"])
     clean = df[~df["narrative"].str.contains(MARKER, regex=True, na=False)]
@@ -288,6 +328,7 @@ def main() -> int:
 
     summaries = []
     for name, dist, tmpl, npool, seed, tier3 in sets:
+        name = name + args.suffix
         out = build(name, dist, tmpl, npool, customers, txn_by_cust, seed, tier3)
         out.to_parquet(SYN / f"injected_{name}.parquet", index=False)
         counts: dict[str, int] = {}
