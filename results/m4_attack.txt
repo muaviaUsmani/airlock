@@ -18,12 +18,25 @@ located on the surface rather than taken on trust.
 ------------------------------------------------------------------------
 HEADLINE — re-identification rate at that configuration
 
-  method         U unique    K set<5   R rank-1  attacker FP
-  raw               36.9%      44.3%      37.0%         0.5%
-  regex             25.7%      32.7%      26.0%         0.1%
+  method         U unique    K set<5   R rank-1  attacker FP  PII removed  collateral
+  raw               36.9%      44.3%      37.0%         0.5%         0.0%       0.00%
+  regex             25.7%      32.7%      26.0%         0.1%        11.3%       0.33%
+  spacy              0.0%       0.0%       0.0%         0.0%        73.3%       3.58%
+  presidio           1.2%       3.2%       1.2%         0.4%        46.7%       1.90%
+  encoder            0.2%       0.3%       0.2%         0.2%        83.0%       0.40%
 
   U is the headline (DEFINITIONS.md): most conservative, smallest
   rate, weakest claim about risk. K and R sit beside it, not beneath.
+
+
+  READ THE LAST TWO COLUMNS WITH THE FIRST. A re-identification rate
+  alone REWARDS OVER-REDACTION — blank the narrative and nothing leaks,
+  which is exactly why spaCy appears to win. COLLATERAL is the share of
+  non-PII characters destroyed, and it is what bounds usefulness.
+
+  M5 will measure utility properly by asking a frontier model questions
+  about the redacted text. Collateral needs no API key and no judgement:
+  this set carries exact span labels, so both halves are counted.
 
 ------------------------------------------------------------------------
 THE SURFACE — U by tolerance, all field sets
@@ -32,21 +45,33 @@ THE SURFACE — U by tolerance, all field sets
     method            $0/0d      $0/1d      $0/3d      $0/7d      $1/3d      $5/3d     $25/7d
     raw               27.1%      27.1%      27.1%      27.1%      24.6%      23.9%      23.8%
     regex             23.6%      23.6%      23.6%      23.6%      23.6%      23.6%      23.6%
+    spacy              0.0%       0.0%       0.0%       0.0%       0.0%       0.0%       0.0%
+    presidio           0.8%       0.8%       0.8%       0.8%       0.1%       0.1%       0.1%
+    encoder            0.2%       0.2%       0.2%       0.2%       0.1%       0.1%       0.1%
 
   fields = amount+date
     method            $0/0d      $0/1d      $0/3d      $0/7d      $1/3d      $5/3d     $25/7d
     raw               34.5%      33.2%      31.7%      30.1%      25.6%      25.0%      24.6%
     regex             23.6%      23.6%      23.6%      23.6%      23.6%      23.6%      23.6%
+    spacy              0.0%       0.0%       0.0%       0.0%       0.0%       0.0%       0.0%
+    presidio           0.8%       0.8%       0.8%       0.8%       0.1%       0.1%       0.1%
+    encoder            0.2%       0.2%       0.2%       0.2%       0.1%       0.1%       0.1%
 
   fields = amount+date+merchant
     method            $0/0d      $0/1d      $0/3d      $0/7d      $1/3d      $5/3d     $25/7d
     raw               34.8%      33.7%      32.4%      30.9%      25.9%      25.1%      24.8%
     regex             23.9%      23.9%      23.9%      23.9%      23.9%      23.9%      23.9%
+    spacy              0.0%       0.0%       0.0%       0.0%       0.0%       0.0%       0.0%
+    presidio           1.1%       1.1%       1.1%       1.1%       0.1%       0.1%       0.1%
+    encoder            0.2%       0.2%       0.2%       0.2%       0.1%       0.1%       0.1%
 
   fields = amount+date+merchant+city
     method            $0/0d      $0/1d      $0/3d      $0/7d      $1/3d      $5/3d     $25/7d
     raw               36.9%      36.1%      35.0%      33.9%      27.6%      26.9%      26.4%
     regex             25.7%      25.6%      25.6%      25.6%      25.6%      25.6%      25.6%
+    spacy              0.0%       0.0%       0.0%       0.0%       0.0%       0.0%       0.0%
+    presidio           1.2%       1.2%       1.2%       1.2%       0.1%       0.1%       0.1%
+    encoder            0.2%       0.2%       0.2%       0.2%       0.1%       0.1%       0.1%
 
 ------------------------------------------------------------------------
 STABILITY (decision 001)
@@ -57,6 +82,6 @@ measuring the attacker's tuning rather than the leak.
   method           min U     max U    spread
   raw              23.8%     36.9%     13.1
   regex            23.6%     25.7%      2.1
-
-NOTE: the encoder row is absent because M3 has not finished
-training. Every other row is final and will not be recomputed.
+  spacy             0.0%      0.0%      0.0
+  presidio          0.1%      1.2%      1.0
+  encoder           0.1%      0.2%      0.0

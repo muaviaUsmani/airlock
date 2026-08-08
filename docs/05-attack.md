@@ -1,7 +1,7 @@
 # How re-identification is measured
 
-**Status: the attack runs. Raw and regex rows are final; Presidio, spaCy and Airlock follow.
-The Airlock row waits on M3.**
+**Status: M4 complete. All five methods measured. The utility axis (M5) is not yet run — it
+needs a frontier model API key, and `collateral` stands in for it until then.**
 
 ---
 
@@ -165,6 +165,95 @@ risk. Two thirds of the customers remain findable from what a regular expression
 harmless.
 
 Presidio, spaCy and Airlock rows follow. The encoder row is pending M3.
+
+---
+
+## The result
+
+**4,000 injected narratives, 10,000 synthetic customers, 359,375 transactions.** The attacker
+configuration was fixed on raw text before any redaction method was involved
+([decision 005](../DECISIONS/005-how-the-adversary-matches.md)) and applied unchanged to all
+five.
+
+| method | U unique | K set<5 | attacker FP | PII removed | collateral |
+|---|---:|---:|---:|---:|---:|
+| raw | **36.9%** | 44.3% | 0.5% | 0.0% | 0.00% |
+| regex | 25.7% | 32.7% | 0.1% | 11.3% | 0.33% |
+| presidio | 1.2% | 3.2% | 0.4% | 46.7% | 1.90% |
+| **Airlock** | **0.2%** | **0.3%** | 0.2% | **83.0%** | **0.40%** |
+| spacy | 0.0% | 0.0% | 0.0% | 73.3% | 3.58% |
+
+**Read the last two columns with the first, or the table lies to you.**
+
+A re-identification rate on its own **rewards over-redaction** — blank the narrative and nothing
+leaks. That is why spaCy appears to win at 0.0%: it has 17.8% precision on real prose and removes
+roughly five times more than it should. `collateral` is the share of **non-PII characters
+destroyed**, and it is what bounds whether the redacted text is still worth anything.
+
+Both halves are exact rather than estimated: this set carries recorded span labels, so every
+destroyed character is either inside an injected span or outside one. No oracle, no judgement, no
+API key.
+
+### What the numbers say
+
+**Airlock dominates both baselines on both axes at once.** Against Presidio it removes 83.0% of
+PII characters rather than 46.7%, *and* destroys 0.40% of non-PII rather than 1.90%. Against
+spaCy, 83.0% against 73.3%, at **one ninth** the collateral damage. There is no trade being made
+against either — it is better at the job and less destructive while doing it.
+
+Leakage: **36.9% → 0.2%**, a 185-fold reduction, against Presidio's 30-fold.
+
+spaCy's 0.0% is real but bought at 3.58% collateral — nine times Airlock's — which is the
+difference between a redactor and a shredder.
+
+### A correction worth recording
+
+An earlier version of this measurement counted **total characters destroyed** and showed Airlock
+destroying *more* than Presidio (5.3% against 4.6%), which read as Airlock being the more
+aggressive method. That instrument was wrong: removing more characters is only a cost if the
+characters were not personal information. Splitting the same number into PII-removed and
+collateral reversed the conclusion. The raw-character version is not published, because it
+measures effort rather than harm.
+
+### The two measures of "finds more PII" disagree, and both are published
+
+| | substrate | Airlock | Presidio |
+|---|---|---:|---:|
+| span recall | real prose (transfer set) | 70.5% | **77.9%** |
+| PII characters removed | injected (`natural_v2`) | **83.0%** | 46.7% |
+
+These are different substrates and different units, and they point opposite ways. Presidio finds
+more *spans* on real prose; Airlock removes more PII *characters* on injected text. Neither is
+the "true" answer — a method can find many short spans or fewer long ones — and quoting only the
+favourable one would be the easiest dishonesty available here. Both appear wherever this claim is
+made.
+
+### Stability
+
+Per [decision 001](../DECISIONS/001-what-counts-as-re-identification.md), how far U moves across
+the whole tolerance sweep:
+
+| method | min U | max U | spread |
+|---|---:|---:|---:|
+| raw | 23.8% | 36.9% | 13.1 |
+| regex | 23.6% | 25.7% | 2.1 |
+| presidio | 0.1% | 1.2% | 1.0 |
+| **Airlock** | 0.1% | 0.2% | **0.0** |
+
+The ranking of methods does not change anywhere on the surface, so the headline is not an
+artefact of the configuration that was selected.
+
+### What the pre-registered rule actually chose
+
+**Exact matching** — `amount+date+merchant+city`, ±$0.00, ±0 days.
+
+The brief expected the opposite: *"exact is honest and weak; fuzzy is realistic and much harder
+to bound."* On this data exact is the **strongest** attacker, and loosening tolerance *reduces*
+re-identification, because slack pulls in false candidates faster than true ones. The entropy is
+in the cents, and cents do not need fuzzing.
+
+That conclusion came from a rule fixed before any attack code ran, which is the only reason it
+can be quoted at all.
 
 ---
 

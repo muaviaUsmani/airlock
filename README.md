@@ -28,7 +28,7 @@ removed the personal information. Airlock builds a synthetic transaction databas
 *attacks its own output* — taking the redacted text and trying to find the one customer it
 belongs to. That attack is the headline result.
 
-> **Status: M0–M3 complete. M4 running.** The corpus is characterised and
+> **Status: M0–M4 complete. M5 blocked on an API key; M6 partly done.** The corpus is characterised and
 > [DEFINITIONS.md](DEFINITIONS.md) is locked. The three headline numbers below are the *shape*
 > of the claim, not the claim — they are filled in only when a committed script produces them,
 > per [the constitution](.specify/memory/constitution.md). Numbers that cannot be regenerated do
@@ -73,11 +73,19 @@ belongs to. That attack is the headline result.
 
 ## The claim this project is trying to earn
 
-> On real credit-card complaint narratives, a 300MB model running on a laptop removes personal
-> information that Microsoft Presidio misses by **[X]** percentage points, and reduces the rate
-> at which a customer can be re-identified from the remaining text from **[A]%** to **[B]%** —
-> while a frontier model still answers **[C]%** of downstream business questions correctly on
-> the redacted text.
+> On real credit-card complaint narratives, a **372MB** model running on a laptop removes
+> **36.3 percentage points** more personal information than Microsoft Presidio, and reduces the
+> rate at which a customer can be re-identified from the remaining text from **36.9%** to
+> **0.2%** — while destroying **one fifth** as much non-personal text as Presidio and one ninth
+> as much as spaCy.
+>
+> *(The utility half — how many business questions a frontier model still answers correctly —
+> is M5 and is not yet run; it needs an API key. `collateral` stands in for it meanwhile.)*
+>
+> **The honest asterisk:** the two ways of measuring "removes more PII" disagree. Airlock removes
+> 83.0% of PII characters against Presidio's 46.7% on injected text, but Presidio has higher
+> *span* recall on real prose, 77.9% against 70.5%. Both are published; see
+> [docs/05-attack.md](docs/05-attack.md).
 
 Three numbers. All mechanically measurable. None requires a human or a model to judge anything.
 

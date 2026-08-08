@@ -278,21 +278,26 @@ def main() -> int:
     import m3_evaluate as M3
     methods = [m for m in args.methods.split(",")]
     variants: dict[str, list[str]] = {}
+    predictions: dict[str, list] = {}
 
     for m in methods:
         t0 = time.time()
         if m == "raw":
             variants["raw"] = texts
+            predictions["raw"] = [[] for _ in texts]
         elif m == "regex":
-            variants[m] = [redact(t, p) for t, p in zip(texts, M3.predict_regex(texts))]
+            predictions[m] = M3.predict_regex(texts)
+            variants[m] = [redact(t, p) for t, p in zip(texts, predictions[m])]
         elif m == "spacy":
             import spacy
             nlp = spacy.load("en_core_web_lg")
-            variants[m] = [redact(t, p) for t, p in zip(texts, M3.predict_spacy(texts, nlp))]
+            predictions[m] = M3.predict_spacy(texts, nlp)
+            variants[m] = [redact(t, p) for t, p in zip(texts, predictions[m])]
         elif m == "presidio":
             from presidio_analyzer import AnalyzerEngine
             an = AnalyzerEngine()
-            variants[m] = [redact(t, p) for t, p in zip(texts, M3.predict_presidio(texts, an))]
+            predictions[m] = M3.predict_presidio(texts, an)
+            variants[m] = [redact(t, p) for t, p in zip(texts, predictions[m])]
         elif m == "encoder":
             md = Path(args.model_dir)
             if not md.exists():
@@ -304,8 +309,47 @@ def main() -> int:
             tok = AutoTokenizer.from_pretrained(md)
             mod = AutoModelForTokenClassification.from_pretrained(
                 md, dtype=torch.float32).to(dev).eval()
-            variants[m] = [redact(t, p) for t, p in zip(texts, M3.predict_encoder(texts, mod, tok, dev))]
+            predictions[m] = M3.predict_encoder(texts, mod, tok, dev)
+            variants[m] = [redact(t, p) for t, p in zip(texts, predictions[m])]
         print(f"  redacted with {m:<9} ({time.time()-t0:.0f}s)", flush=True)
+
+    # --- what did each method destroy, and was it PII? ---------------------
+    # A re-identification rate alone REWARDS OVER-REDACTION: blank the narrative
+    # and nothing leaks. spaCy scoring 0.0% is exactly that failure mode.
+    #
+    # Raw character count is not much better, because destroying the RIGHT
+    # characters is the job. This set carries exact span labels, so both halves
+    # are directly measurable on the same text:
+    #
+    #   PII removed        of the characters we injected as PII, how many went
+    #   COLLATERAL         of everything else, how many were destroyed anyway
+    #
+    # Collateral is the number that bounds usefulness. M5 will measure utility
+    # properly with a frontier model; this needs no API key and no judgement.
+    span_lists = inj["spans"].tolist()
+    damage = {}
+    for m, preds in predictions.items():
+        pii_chars = pii_hit = other_chars = other_hit = 0
+        for text, spans, pred in zip(texts, span_lists, preds):
+            covered = bytearray(len(text))
+            for s_, e_, *_ in pred:
+                for i in range(max(0, s_), min(len(text), e_)):
+                    covered[i] = 1
+            is_pii = bytearray(len(text))
+            for sp in spans:
+                for i in range(sp["start"], min(sp["end"], len(text))):
+                    is_pii[i] = 1
+            for i in range(len(text)):
+                if is_pii[i]:
+                    pii_chars += 1
+                    pii_hit += covered[i]
+                else:
+                    other_chars += 1
+                    other_hit += covered[i]
+        damage[m] = {
+            "pii_removed": 100 * pii_hit / max(pii_chars, 1),
+            "collateral": 100 * other_hit / max(other_chars, 1),
+        }
 
     # --- extract once per method, then sweep ------------------------------
     extracted = {m: [extract(t, merchant_names, city_names, name_set) for t in v]
@@ -350,12 +394,24 @@ def main() -> int:
          f"  amount tolerance  +/- ${cfg[1]:.2f}",
          f"  date tolerance    +/- {int(cfg[2])} days", "",
          "-" * 72, "HEADLINE — re-identification rate at that configuration", "",
-         f"  {'method':<12} {'U unique':>10} {'K set<5':>10} {'R rank-1':>10} {'attacker FP':>12}"]
+         f"  {'method':<12} {'U unique':>10} {'K set<5':>10} {'R rank-1':>10} {'attacker FP':>12} {'PII removed':>12} {'collateral':>11}"]
     for _, r in head.iterrows():
         L.append(f"  {r['method']:<12} {r['U_unique_pct']:>9.1f}% {r['K_smallset_pct']:>9.1f}% "
-                 f"{r['R_rank1_pct']:>9.1f}% {r['attacker_fp_pct']:>11.1f}%")
+                 f"{r['R_rank1_pct']:>9.1f}% {r['attacker_fp_pct']:>11.1f}% "
+                 f"{damage.get(r['method'], {}).get('pii_removed', 0):>11.1f}% "
+                 f"{damage.get(r['method'], {}).get('collateral', 0):>10.2f}%")
     L += ["", "  U is the headline (DEFINITIONS.md): most conservative, smallest",
-          "  rate, weakest claim about risk. K and R sit beside it, not beneath.", ""]
+          "  rate, weakest claim about risk. K and R sit beside it, not beneath.",
+          "",
+          "",
+          "  READ THE LAST TWO COLUMNS WITH THE FIRST. A re-identification rate",
+          "  alone REWARDS OVER-REDACTION — blank the narrative and nothing leaks,",
+          "  which is exactly why spaCy appears to win. COLLATERAL is the share of",
+          "  non-PII characters destroyed, and it is what bounds usefulness.",
+          "",
+          "  M5 will measure utility properly by asking a frontier model questions",
+          "  about the redacted text. Collateral needs no API key and no judgement:",
+          "  this set carries exact span labels, so both halves are counted.", ""]
 
     L += ["-" * 72, "THE SURFACE — U by tolerance, all field sets", ""]
     for fields in FIELD_SETS:
