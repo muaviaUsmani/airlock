@@ -1,7 +1,7 @@
 # How re-identification is measured
 
-**Status: the adversary's database is built (M2). The attack itself is M4 and is not written
-yet — one decision has to be made first, and it is recorded at the bottom of this page.**
+**Status: the attack runs. Raw and regex rows are final; Presidio, spaCy and Airlock follow.
+The Airlock row waits on M3.**
 
 ---
 
@@ -105,9 +105,12 @@ attacker's thresholds are perturbed).
 
 ## What the attack will be run against
 
-Per [decision 004](../DECISIONS/004-two-injection-distributions.md), the headline comes from the
-**`natural`** injected set only — 4,000 narratives at measured corpus frequencies, each carrying
-personal information drawn from one synthetic customer's real record.
+Per [decision 004](../DECISIONS/004-two-injection-distributions.md) the headline comes from a
+natural-frequency set, and per
+[decision 007](../DECISIONS/007-tier3-frequencies-cannot-come-from-markers.md) that set is
+**`natural_v2`** — 4,000 narratives, each carrying personal information drawn from one synthetic
+customer's real record. `natural` is still built and still reported, as the under-estimate it
+turned out to be.
 
 A sanity check on that linkage, using an exact join on amount and date alone and nothing else:
 
@@ -165,17 +168,50 @@ Presidio, spaCy and Airlock rows follow. The encoder row is pending M3.
 
 ---
 
-## The decision that blocks M4
+## How the adversary matches
 
-**How the adversary matches is open fork #3 in the brief, and is not decided.**
+Settled in [decision 005](../DECISIONS/005-how-the-adversary-matches.md), which resolved the
+brief's open fork #3. The framing that did the work:
 
-> *Exact joins on extracted values only, or fuzzy matching on approximate details (dates near
-> each other, amounts within a range). Exact is honest and weak; fuzzy is realistic and much
-> harder to bound.*
+> **Exact matching is fuzzy matching with zero tolerance.**
 
-It is left open deliberately. The choice changes every number on this page, and the brief
-reserves it. It will be recorded in `DECISIONS/` with its reasoning before any attack code runs.
+Exact and fuzzy are not two attackers. An attacker is described entirely by *which fields it
+uses* and *how much slack it allows*, so this is one function of two arguments and M4 sweeps
+both. Reporting "exact gets A%, fuzzy gets B%" invites the question *B% at what tolerance?* and
+has no answer; a sweep answers it and costs barely more to run.
 
-One constraint is already fixed by decision 001: the M4 harness is **parameterised on matching
-threshold from the start**, not retrofitted, because measuring the stability of U, K and R
-requires running the attack at several thresholds whichever way this fork lands.
+| axis | swept over |
+|---|---|
+| fields | amount · amount+date · +merchant · +city |
+| tolerance | exact · ±1 · ±3 · ±7 days, and ±$0 · ±$1 · ±$5 · ±$25 |
+
+Query order follows **measured** selectivity rather than convenience: an amount (16.3 customers
+per value) or a merchant can open a search; a date (479 per value) can only narrow one. An
+attacker holding nothing but a date has identified nobody, and the matcher returning nothing
+there is the correct answer rather than a shortcut.
+
+### The safeguard, which matters more than the sweep
+
+A tolerance sweep is an obvious way to manufacture a headline: loosen until Presidio-redacted
+text leaks a lot, tighten until Airlock-redacted text leaks little, report the gap.
+
+So the selection rule was **pre-registered in decision 005 before any attack code was written**:
+
+1. Tolerance and field set are chosen on **raw text only** — the condition where no redaction
+   method is involved and none can be favoured.
+2. Selection maximises unique re-identification subject to the attacker's false-positive rate
+   staying under 5%.
+3. That one configuration is applied **unchanged** to every method.
+4. The full sweep is published anyway, so the headline can be located on the surface rather than
+   taken on trust.
+5. If the ranking of methods changes across the sweep, that is a finding about instability and
+   goes in the README — not a reason to hunt for a configuration where it does not.
+
+Point 1 is load-bearing: tuning the attacker against nobody's redaction is what makes the
+comparison it then performs neither rigged for nor against any method.
+
+### Why the attacker's error rate is always quoted beside its success rate
+
+A re-identification rate without a false-positive rate is meaningless — an attacker that guesses
+constantly will "identify" plenty of people. `DEFINITIONS.md` requires both, and matching the
+wrong customer is scored as a non-re-identification and reported separately.
