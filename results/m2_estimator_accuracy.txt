@@ -1,0 +1,63 @@
+M2 — category estimator accuracy
+========================================================================
+
+35,706 injected spans, category known because we wrote it,
+re-masked as XXXX and put back through the estimator.
+
+  correct               8,514  ( 23.8%)
+  UNKNOWN (declined)   21,957  ( 61.5%)
+  WRONG                 5,235  ( 14.7%)
+
+Declining is safe: an UNKNOWN marker is never mined into a carrier and
+never scored in the transfer test. A WRONG guess is the dangerous one —
+it puts a mislabelled carrier into training AND the same mistake into
+the test that grades it.
+
+------------------------------------------------------------------------
+PER CATEGORY
+
+  true category            n   correct   unknown  most confused with
+  ACCOUNT_ID           5,640     50.5%     49.5%  -                 
+  ORG_THIRD_PARTY      4,984      0.0%    100.0%  -                 
+  PERSON               3,876      0.0%     49.4%  DATE              
+  AMOUNT               2,447      0.0%    100.0%  -                 
+  DATE                 2,421    100.0%      0.0%  -                 
+  CASE_REF             2,404     49.0%     51.0%  -                 
+  TEMPORAL             2,352      0.0%     51.2%  DATE              
+  CONTACT              1,703      0.0%     49.7%  TEMPORAL          
+  LOCATION_FINE        1,673     49.9%     50.1%  -                 
+  MERCHANT             1,499      0.0%     48.9%  DATE              
+  PROTECTED_ATTR       1,442     49.4%     50.6%  -                 
+  RELATIONSHIP         1,078      0.0%    100.0%  -                 
+  LIFE_EVENT           1,077      0.0%    100.0%  -                 
+  GOV_ID               1,051      0.0%    100.0%  -                 
+  HEALTH               1,037      0.0%    100.0%  -                 
+  EMPLOYER             1,022     50.8%      0.0%  TEMPORAL          
+
+------------------------------------------------------------------------
+HOW TO READ THIS, AND WHAT IT DOES NOT SAY
+
+These spans sit in HAND-WRITTEN carrier sentences, so this grades the
+rules against a couple of phrasings per category, not against real
+corpus prose. The absolute percentage is therefore not an estimate of
+real-world accuracy, and is not quoted as one.
+
+What it does establish, and this is robust: the rules are BRITTLE TO
+PHRASING. Two ordinary English sentences per category, and for ten of
+sixteen categories the estimator recognises neither. Real customer
+prose is far more varied than two authored sentences, so on the corpus
+it will do no better and probably worse.
+
+The ~50%-correct/~50%-unknown pattern is the giveaway: it means one
+held-out phrasing happened to contain a cue the rules match and the
+other did not. That is a coin flip on wording, not comprehension.
+
+------------------------------------------------------------------------
+WHAT THIS MEANS FOR THE PIPELINE
+
+  trustworthy (>=70% correct): DATE
+  unreliable  (<40%, n>=100):  ORG_THIRD_PARTY, PERSON, AMOUNT, TEMPORAL, CONTACT, MERCHANT, RELATIONSHIP, LIFE_EVENT, GOV_ID, HEALTH
+
+Categories in the second list must not be mined into carriers or scored
+in the transfer test without saying so, because for those the training
+data and the grader share a mistake.
