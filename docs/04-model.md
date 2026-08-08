@@ -163,57 +163,117 @@ score a whole method class the free labels physically cannot.
 
 A modest gap, which at the time read as good news. It was not, and the reason is below.
 
-### On real prose, the claim does not hold
+### On real prose — the first result, before the injector was rebuilt
 
 2,492 real narratives, 10,543 spans, no carrier templates anywhere in the text
-([decision 008](../DECISIONS/008-the-transfer-metric-was-invalid.md)):
+([decision 008](../DECISIONS/008-the-transfer-metric-was-invalid.md)). Encoder trained on the
+**authored** carriers, three seeds:
+
+| method | recall | precision | F1 |
+|---|---:|---:|---:|
+| presidio | **77.9%** | 52.8% | 62.9% |
+| encoder (authored) | 47.3% ±17.1 | 94.9% ±1.8 | 62.0% ±15.9 |
+| spacy | 44.1% | 17.8% | 25.3% |
+| regex | 3.5% | 7.4% | 4.8% |
+
+`ORG_THIRD_PARTY` — a tier 2 category, the kind this project exists for — scored **0.1%**.
+
+**Look at the ± before anything else.** Recall varies by ±17.1 points across seeds. A single run
+could have landed anywhere from ~30% to ~64%, and the project had been reporting n=1 numbers up
+to this point. That spread is the strongest argument in the repository for the seed sweep, and
+it was invisible until [decision 011](../DECISIONS/011-training-moves-to-rented-gpu.md) made a
+second seed affordable.
+
+### After rebuilding the injector
+
+Same architecture, same hyper-parameters, same test set. **Only the training data changed**
+([decision 010](../DECISIONS/010-hardening-the-injector.md)):
 
 | method | recall | precision | F1 | category accuracy |
 |---|---:|---:|---:|---:|
-| presidio | **77.4%** | 52.7% | 62.7% | n/a |
-| **encoder** | 59.7% | **94.6%** | **73.2%** | **99.6%** |
-| spacy | 43.5% | 17.6% | 25.0% | n/a |
+| **encoder (hardened)** | 70.5% ±1.0 | **97.5% ±1.0** | **81.8% ±0.5** | 99.2% |
+| presidio | **77.9%** | 52.8% | 62.9% | n/a |
+| encoder (authored) | 47.3% ±17.1 | 94.9% ±1.8 | 62.0% ±15.9 | 99.6% |
+| spacy | 44.1% | 17.8% | 25.3% | n/a |
 | regex | 3.5% | 7.4% | 4.8% | n/a |
 
-The encoder wins F1 and precision by a wide margin and labels almost perfectly when it fires.
-**Presidio finds more.** And encoder recall falls from **90.1% on injected text to 59.7% on real
-prose** — a 30-point drop that is the honest size of the synthetic-to-real gap.
+**F1 81.8% against Presidio's 62.9%**, driven by precision — 97.5% against 52.8%. When this
+model marks something, it is almost always right, and right about what it is (99.2% category
+accuracy).
 
-### The categories Airlock was built for
+**Presidio still finds more.** 77.9% recall against 70.5%. That row is published because it is
+the honest shape of the result: Airlock is the better redactor by F1 and by precision, and it is
+not the better *detector* by recall.
 
-| category | tier | n | encoder | presidio | spacy |
-|---|---:|---:|---:|---:|---:|
-| ORG_THIRD_PARTY | 2 | 647 | **0.8%** | 0.5% | 75.4% |
-| LOCATION_FINE | 2 | 87 | 56.3% | 85.1% | 87.4% |
-| PROTECTED_ATTR | 2 | 56 | **53.6%** | 21.4% | 21.4% |
-| PERSON | 1 | 425 | 50.8% | 97.4% | 97.4% |
-| TEMPORAL | 3 | 380 | **7.9%** | 97.1% | 97.4% |
-| DATE | 3 | 7,607 | 69.9% | 89.8% | 35.7% |
+**The variance collapsed**: ±17.1 → ±1.0 on recall, ±15.9 → ±0.5 on F1. The hardened data does
+not just train a better model, it trains a *stable* one. That is arguably the more important
+finding, because a method whose quality depends on the seed is not a method.
 
-`ORG_THIRD_PARTY` at 0.8% on 647 spans is a well-powered failure. `TEMPORAL` at 7.9% is another.
-`PERSON` at 50.8% against 97.4% is a third, on the easiest category there is. Only
-`PROTECTED_ATTR` shows the hoped-for pattern.
+### Per category — and the one row that proves the diagnosis
 
-Categories below about n=50 — `RELATIONSHIP` (16), `LIFE_EVENT` (9), `EMPLOYER` (9), `HEALTH`
-(3), `GOV_ID` (2) — support no claim in either direction and are shown only so the table is not
-silently truncated. `DATE` is 7,607 of 10,543 spans, so the aggregate row is mostly about dates.
+| category | n | presidio | spacy | authored | **hardened** | delta |
+|---|---:|---:|---:|---:|---:|---:|
+| ORG_THIRD_PARTY | 647 | 5.7% | 78.8% | 0.1% | **45.0%** | **+44.9** |
+| PERSON | 425 | 97.2% | 97.2% | 33.3% | **65.5%** | +32.2 |
+| AMOUNT | 246 | 0.8% | 84.6% | 38.2% | **65.7%** | +27.5 |
+| DATE | 7,607 | 90.3% | 36.6% | 55.3% | **78.9%** | +23.7 |
+| LOCATION_FINE | 87 | 85.1% | 87.4% | 46.4% | **68.6%** | +22.2 |
+| EMPLOYER | 9 | 11.1% | 88.9% | 40.7% | 59.3% | +18.5 |
+| ACCOUNT_ID | 714 | 20.2% | 23.8% | 24.9% | **41.2%** | +16.3 |
+| PROTECTED_ATTR | 56 | 12.5% | 12.5% | 39.9% | **53.0%** | +13.1 |
+| CASE_REF | 176 | 98.9% | 30.1% | 78.4% | 87.3% | +8.9 |
+| CONTACT | 122 | 92.6% | 6.6% | 77.6% | 81.1% | +3.6 |
+| MERCHANT | 44 | 20.5% | 97.7% | 85.6% | 88.6% | +3.0 |
+| **TEMPORAL** | **380** | **96.8%** | **96.8%** | **6.6%** | **3.1%** | **−3.5** |
+| RELATIONSHIP | 16 | 0.0% | 0.0% | 4.2% | 0.0% | −4.2 |
 
-### Why, as far as the evidence supports
+**`TEMPORAL` is the control nobody designed.** It is the one well-powered category that received
+**no real carriers** — mining found none, and entity-site substitution does not cover weekdays or
+times of day, so it kept its hand-authored templates. It is also the only well-powered category
+that did not improve.
 
-The encoder learned **category-specific carrier contexts**, not the entity types.
+Treatment applied → large gains. Treatment not applied → nothing. That is close to a controlled
+experiment, and it is the strongest evidence available that
+[decision 008](../DECISIONS/008-the-transfer-metric-was-invalid.md) diagnosed the right cause:
+the model was learning carrier contexts, not entity types.
 
-`ORG_THIRD_PARTY` surrogates come from the same ten bank names it trained on, so the failure is
-contextual rather than lexical. Trained on *"I also contacted Citibank to see if they could
-help"*, it does not recognise the same name in prose a customer actually wrote.
+It is also a standing failure. At 3.1% against 96.8% for both baselines, this model is useless
+on times and weekdays, and `TEMPORAL` is a tier 3 quasi-identifier that feeds the M4 attack
+directly.
 
-**Which means the held-out-template control was not sufficient.** It showed an 8.7-point gap and
-looked reassuring, but every template in that set was written by the same generator in the same
-register. Held-out templates test memorisation of specific strings. They do not test transfer to
-a different author. Real prose was the only test that could catch this, and it did.
+### Where it still loses
 
-The prime suspect is the **injector**, not the architecture — which makes the generative branch
-a more interesting experiment than it was, because it would separate "this architecture" from
-"this training data".
+Published because publishing the rows we lose is the point:
+
+- **`PERSON` 65.5% against 97.2%.** The easiest category there is, and both baselines beat it.
+- **`TEMPORAL` 3.1% against 96.8%.** Effectively blind.
+- **`DATE`, `CASE_REF`, `CONTACT`** — Presidio wins each, by 4 to 12 points.
+- **`ORG_THIRD_PARTY` 45.0% against spaCy's 78.8%** — a 45-point gain and still second.
+
+Categories below about n=50 (`RELATIONSHIP` 16, `EMPLOYER` 9, `HEALTH` 3, `GOV_ID` 2) support no
+claim in either direction. `DATE` is 7,607 of 10,543 spans, so the aggregate row is substantially
+a statement about dates.
+
+### Inference cost, measured on the M1
+
+The claim is a model that runs on a laptop, so this is measured on the laptop
+([decision 011](../DECISIONS/011-training-moves-to-rented-gpu.md)) — not on the rented GPU that
+trained it.
+
+| | |
+|---|---|
+| throughput | **5.0 narratives/sec** (199 ms each) |
+| peak process memory | 4.8 GB — fits 16 GB with room |
+| model on disk | **744 MB** fp32, ~372 MB fp16 |
+
+At 5/sec, 300,000 complaints is about **17 hours** on one laptop — an overnight job, not a
+blocker.
+
+**A correction to the README's framing.** The headline sentence said "a 300MB model". The
+measured artifact is 744 MB in fp32 and would be ~372 MB in fp16. Neither is 300 MB. The
+README now quotes the measured size.
+
+---
 
 ---
 

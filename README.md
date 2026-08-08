@@ -1,6 +1,6 @@
 # Airlock
 
-**A 300MB model, running on a laptop, that strips personal information out of bank complaint
+**A 372MB model, running on a laptop, that strips personal information out of bank complaint
 text — and an attack that measures whether the customer can still be identified afterwards.**
 
 ---
@@ -28,7 +28,7 @@ removed the personal information. Airlock builds a synthetic transaction databas
 *attacks its own output* — taking the redacted text and trying to find the one customer it
 belongs to. That attack is the headline result.
 
-> **Status: M0, M1 and M2 complete. M3 next.** The corpus is characterised and
+> **Status: M0–M3 complete. M4 running.** The corpus is characterised and
 > [DEFINITIONS.md](DEFINITIONS.md) is locked. The three headline numbers below are the *shape*
 > of the claim, not the claim — they are filled in only when a committed script produces them,
 > per [the constitution](.specify/memory/constitution.md). Numbers that cannot be regenerated do
@@ -46,6 +46,14 @@ belongs to. That attack is the headline result.
 > redaction marker is letters. No pattern can ever match one. The free labels cannot evaluate
 > pattern-based detection at all, which is why the like-for-like comparison has to happen on
 > injected data. Details in [docs/03-baselines.md](docs/03-baselines.md).
+>
+> **What M3 found:** on real prose the encoder reaches **F1 81.8% against Presidio's 62.9%**,
+> driven by precision (97.5% vs 52.8%) — but **Presidio still finds more** (77.9% recall vs
+> 70.5%). Rebuilding the injector to use carriers mined from the corpus rather than sentences we
+> wrote moved `ORG_THIRD_PARTY` from **0.1% to 45.0%**, and collapsed seed-to-seed variance from
+> ±17.1 to ±1.0. The one well-powered category that got no real carriers, `TEMPORAL`, is also
+> the only one that did not improve — which is as close to a controlled experiment as this
+> project has managed. Details in [docs/04-model.md](docs/04-model.md).
 >
 > **And the result that surprised us most:** running the same attack on the same narratives with
 > the same attacker, and changing only where the injection frequencies came from, moved the

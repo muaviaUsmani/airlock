@@ -258,6 +258,8 @@ def evaluate(extracted: list[dict], truth: list[str], index: Index,
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--methods", default="raw,regex,spacy,presidio,encoder")
+    ap.add_argument("--model-dir", default=str(MODEL_DIR),
+                    help="which trained encoder to attack the output of")
     ap.add_argument("--set", default="natural_v2", help="natural (marker-derived) or natural_v2 (decision 007)")
     args = ap.parse_args()
 
@@ -292,15 +294,16 @@ def main() -> int:
             an = AnalyzerEngine()
             variants[m] = [redact(t, p) for t, p in zip(texts, M3.predict_presidio(texts, an))]
         elif m == "encoder":
-            if not MODEL_DIR.exists():
+            md = Path(args.model_dir)
+            if not md.exists():
                 print("  (encoder not trained yet — skipping that row)")
                 continue
             import torch
             from transformers import AutoModelForTokenClassification, AutoTokenizer
             dev = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-            tok = AutoTokenizer.from_pretrained(MODEL_DIR)
+            tok = AutoTokenizer.from_pretrained(md)
             mod = AutoModelForTokenClassification.from_pretrained(
-                MODEL_DIR, dtype=torch.float32).to(dev).eval()
+                md, dtype=torch.float32).to(dev).eval()
             variants[m] = [redact(t, p) for t, p in zip(texts, M3.predict_encoder(texts, mod, tok, dev))]
         print(f"  redacted with {m:<9} ({time.time()-t0:.0f}s)", flush=True)
 
