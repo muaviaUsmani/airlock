@@ -138,7 +138,8 @@ and published so a reader knows the floor, but a design is not out of scope mere
 more than a laptop.
 
 **Training** may run on rented GPU, per [decision 011](../../DECISIONS/011-training-moves-to-rented-gpu.md).
-The premise is that the *data* cannot leave the building, which constrains inference; the
+Per [decision 012](../../DECISIONS/012-the-premise-is-a-trust-boundary-not-a-laptop.md) the
+constraint is the trust boundary rather than physical locality; the
 training data here is public CFPB text with synthetic personal information we generated
 ourselves, so there is nothing confidential in it. Inference latency and memory are still
 measured on the M1, because that is the claim being made.

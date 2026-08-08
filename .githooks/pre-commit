@@ -2,22 +2,36 @@
 # Block commits containing anything shaped like a credential.
 #
 # The constitution says no keys, tokens or real personal data enter this
-# repository at any point INCLUDING COMMIT HISTORY. History is the hard part:
-# a key removed in a later commit is still in the repo forever. So this refuses
-# the commit rather than trusting anyone to notice.
-set -euo pipefail
+# repository at any point INCLUDING COMMIT HISTORY. History is the hard part: a
+# key removed in a later commit is still in the repo forever. So this refuses the
+# commit rather than trusting anyone to notice.
+#
+# NOTE: the first version of this hook used a PCRE lookahead with `grep -E`,
+# which macOS grep rejects with "repetition-operator operand invalid". It printed
+# an error and exited non-zero from the pipeline rather than from a real match,
+# so it neither blocked nor passed cleanly. A security check that fails silently
+# is worse than none, so this version is deliberately plain ERE and is tested.
+set -uo pipefail
 
 PATTERNS='sk-ant-api[0-9]{2}-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{32,}|ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+fail=0
 
-if git diff --cached --name-only -z | xargs -0 -I{} sh -c 'test -f "{}" && git show ":{}"' 2>/dev/null \
-   | grep -nEq "$PATTERNS"; then
-  echo "BLOCKED: a staged file matches a credential pattern." >&2
-  echo "Nothing was committed. If this is a false positive, inspect it first —" >&2
-  echo "a key in git history cannot be removed by a later commit." >&2
-  exit 1
-fi
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  case "$f" in
+    .secrets/README.md|.secrets/env.example) continue ;;
+    .secrets/*) echo "BLOCKED: refusing to commit $f (under .secrets/)" >&2; fail=1; continue ;;
+    .githooks/pre-commit) continue ;;   # this file names the patterns it blocks
+  esac
+  if git show ":$f" 2>/dev/null | grep -Eq "$PATTERNS"; then
+    echo "BLOCKED: $f matches a credential pattern." >&2
+    fail=1
+  fi
+done < <(git diff --cached --name-only)
 
-if git diff --cached --name-only | grep -qE '^\.secrets/(?!README|env\.example)'; then
-  echo "BLOCKED: attempting to commit a file under .secrets/." >&2
+if [ "$fail" -ne 0 ]; then
+  echo "" >&2
+  echo "Nothing was committed. A key in git history cannot be removed by a" >&2
+  echo "later commit — rotate it and keep it out of the tree." >&2
   exit 1
 fi

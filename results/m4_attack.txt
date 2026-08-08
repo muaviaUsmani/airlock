@@ -2,7 +2,7 @@ M4 — the attack
 ========================================================================
 
 set: injected_natural_v2 (4,000 narratives)
-database: 2,500 customers, 89,473 transactions
+database: 10,000 customers, 359,375 transactions
 
 PRE-REGISTERED CONFIGURATION (decision 005)
 ------------------------------------------------------------------------
@@ -12,15 +12,15 @@ redaction method. The full sweep is below so the headline can be
 located on the surface rather than taken on trust.
 
   fields          amount+date+merchant+city
-  amount tolerance  +/- $25.00
-  date tolerance    +/- 7 days
+  amount tolerance  +/- $0.00
+  date tolerance    +/- 0 days
 
 ------------------------------------------------------------------------
 HEADLINE — re-identification rate at that configuration
 
   method         U unique    K set<5   R rank-1  attacker FP  PII removed  collateral
-  raw               19.1%      20.4%      19.4%         1.8%         0.0%       0.00%
-  presidio           0.2%       0.2%       0.2%         0.2%        46.7%       1.90%
+  raw               36.9%      44.3%      37.0%         0.5%         0.0%       0.00%
+  presidio           1.2%       3.2%       1.2%         0.4%        46.7%       1.90%
 
   U is the headline (DEFINITIONS.md): most conservative, smallest
   rate, weakest claim about risk. K and R sit beside it, not beneath.
@@ -40,23 +40,23 @@ THE SURFACE — U by tolerance, all field sets
 
   fields = amount
     method            $0/0d      $0/1d      $0/3d      $0/7d      $1/3d      $5/3d     $25/7d
-    raw               18.7%      18.7%      18.7%      18.7%      18.9%      18.9%      18.7%
-    presidio           0.2%       0.2%       0.2%       0.2%       0.2%       0.2%       0.2%
+    raw               27.1%      27.1%      27.1%      27.1%      24.6%      23.9%      23.8%
+    presidio           0.8%       0.8%       0.8%       0.8%       0.1%       0.1%       0.1%
 
   fields = amount+date
     method            $0/0d      $0/1d      $0/3d      $0/7d      $1/3d      $5/3d     $25/7d
-    raw               18.7%      18.7%      18.7%      18.7%      18.8%      18.8%      18.8%
-    presidio           0.2%       0.2%       0.2%       0.2%       0.2%       0.2%       0.2%
+    raw               34.5%      33.2%      31.7%      30.1%      25.6%      25.0%      24.6%
+    presidio           0.8%       0.8%       0.8%       0.8%       0.1%       0.1%       0.1%
 
   fields = amount+date+merchant
     method            $0/0d      $0/1d      $0/3d      $0/7d      $1/3d      $5/3d     $25/7d
-    raw               18.7%      18.7%      18.7%      18.7%      18.8%      18.8%      18.8%
-    presidio           0.2%       0.2%       0.2%       0.2%       0.2%       0.2%       0.2%
+    raw               34.8%      33.7%      32.4%      30.9%      25.9%      25.1%      24.8%
+    presidio           1.1%       1.1%       1.1%       1.1%       0.1%       0.1%       0.1%
 
   fields = amount+date+merchant+city
     method            $0/0d      $0/1d      $0/3d      $0/7d      $1/3d      $5/3d     $25/7d
-    raw               19.1%      19.1%      19.1%      19.1%      19.1%      19.1%      19.1%
-    presidio           0.2%       0.2%       0.2%       0.2%       0.2%       0.2%       0.2%
+    raw               36.9%      36.1%      35.0%      33.9%      27.6%      26.9%      26.4%
+    presidio           1.2%       1.2%       1.2%       1.2%       0.1%       0.1%       0.1%
 
 ------------------------------------------------------------------------
 STABILITY (decision 001)
@@ -65,8 +65,8 @@ How far U moves across the sweep. A definition that swings wildly is
 measuring the attacker's tuning rather than the leak.
 
   method           min U     max U    spread
-  raw              18.7%     19.1%      0.4
-  presidio          0.2%      0.2%      0.0
+  raw              23.8%     36.9%     13.1
+  presidio          0.1%      1.2%      1.0
 
 NOTE: the encoder row is absent because M3 has not finished
 training. Every other row is final and will not be recomputed.
