@@ -79,6 +79,45 @@ SLOT = {
 }
 
 
+# --- DETERMINING contexts only (decision 010) ------------------------------
+# The estimator scored 23.8% because its rules mixed contexts that DETERMINE the
+# type ("ending in XXXX" can only be an account) with ones that merely SUGGEST it
+# ("with XXXX" could be a person, a bank or a city). Only the first kind is mined
+# now. Coverage collapses; that is the trade, and it is published.
+#
+# Note what is absent: tier 2. There is rarely a phrase that names a contextual
+# identifier — "my ex-husband XXXX" says the marker is a NAME, not a
+# relationship. Mining cannot reach the categories that failed, which is why
+# entity-site substitution exists for them.
+DETERMINING = [
+    ("ACCOUNT_ID", r"(ending|ends|end)\s+(in|with)\s*$"),
+    ("ACCOUNT_ID", r"(account|acct|card)\s*(number|no|#)\s*:?\s*$"),
+    ("ACCOUNT_ID", r"last\s+(four|4)\s+(digits?\s*)?(of\s+)?(my\s+)?(account|card)?\s*(is|are|:)?\s*$"),
+    ("CASE_REF",   r"(case|claim|complaint|dispute|reference|ref|confirmation|ticket)\s*(number|no|#)\s*:?\s*$"),
+    ("GOV_ID",     r"(social\s+security|ssn|tax\s*id|driver'?s?\s+licen[cs]e|passport)\s*(number|no|#)?\s*:?\s*$"),
+    ("CONTACT",    r"(phone|telephone|fax|mobile|cell)\s*(number|no|#)\s*:?\s*$"),
+    ("CONTACT",    r"(e-?mail)\s*(address)?\s*(is|:|at)?\s*$"),
+    ("AMOUNT",     r"[${]\s*$"),
+]
+DETERMINING_RE = [(c, re.compile(p, re.I)) for c, p in DETERMINING]
+
+
+def determining_category(sent: str, start: int, end: int) -> str | None:
+    """Return a category only when surviving context leaves no alternative."""
+    span = sent[start:end].strip()
+    if DATE_SHAPE_RE.match(span):
+        return "DATE"
+    left = sent[max(0, start - 48) : start]
+    for cat, pat in DETERMINING_RE:
+        if pat.search(left):
+            return cat
+    return None
+
+
+DATE_SHAPE_RE = re.compile(
+    r"^X{2}\s*/\s*X{2}\s*/\s*(?:X{2,4}|\d{2,4})$|^X{2}\s*/\s*(?:X{2,4}|\d{2,4})$")
+
+
 def choose_field(cat: str, sent: str, start: int) -> str:
     """
     Pick the slot field from context, not just from the category.
@@ -133,9 +172,9 @@ def main() -> int:
                 rejected["not exactly one marker"] += 1
                 continue
             m = markers[0]
-            cat = classify(sent, m.start(), m.end())
-            if cat not in SLOT:
-                rejected["category not estimable"] += 1
+            cat = determining_category(sent, m.start(), m.end())
+            if cat is None:
+                rejected["context does not DETERMINE the category"] += 1
                 continue
             field = choose_field(cat, sent, m.start())
             template = sent[: m.start()] + f"[[{field}]]" + sent[m.end():]

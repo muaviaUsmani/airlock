@@ -65,10 +65,31 @@ import pandas as pd
 
 import json as _json
 
+import m2_values
 from m2_templates import CATEGORIES, split as split_templates
 
+# Non-PII that LOOKS like PII. DEFINITIONS.md section 1 lists these as explicitly
+# not personal information; the CFPB marks some of them anyway. The model has
+# never seen one as a negative, so "flag anything resembling an entity or a
+# number" was a winning strategy on our data and a losing one on real text.
+# These are injected and NEVER labelled, so flagging one costs precision.
+HARD_NEGATIVES = [
+    "I checked all three bureaus and the error appears on each one.",
+    "My score dropped by 112 points in a single month.",
+    "They took 45 days to respond when the rule allows 30.",
+    "This is a clear violation of 12 CFR 1026.13 as written.",
+    "I bought a MacBook Pro with the card in good faith.",
+    "The interest rate went from 14.99% to 29.99% with no notice.",
+    "My FICO score was 720 before any of this started.",
+    "I have been a customer for 11 years without a single late payment.",
+    "The statement lists 3 separate transactions I did recognise.",
+    "Regulation Z requires them to investigate within two billing cycles.",
+    "They cited section 1681 of the Fair Credit Reporting Act at me.",
+    "I called 4 times and was on hold for over 90 minutes in total.",
+]
 
-def load_templates(use_carriers: bool):
+
+def load_templates(use_carriers: bool):  # noqa: C901
     """
     Return (train_templates, eval_templates).
 
@@ -86,9 +107,18 @@ def load_templates(use_carriers: bool):
     if not path.exists():
         raise SystemExit(f"missing {path} — run scripts/m2_mine_carriers.py first")
     mined = _json.loads(path.read_text())
+    ent_path = SYN / "entity_carriers.json"
+    ent = _json.loads(ent_path.read_text()) if ent_path.exists() else {"train": {}, "eval": {}}
+
+    # Priority: entity sites (real prose, real syntactic position, no category
+    # estimation) > determining-context mining > hand-written. Tier 2 can only
+    # come from entity sites, because no phrase in English names a contextual
+    # identifier — see decision 010.
     train, evl, source = {}, {}, {}
     for c in hand_train:
-        if c in mined["train"] and c in mined["eval"]:
+        if c in ent["train"] and c in ent["eval"]:
+            train[c], evl[c], source[c] = ent["train"][c], ent["eval"][c], "entity-site"
+        elif c in mined["train"] and c in mined["eval"]:
             train[c], evl[c], source[c] = mined["train"][c], mined["eval"][c], "mined"
         else:
             train[c], evl[c], source[c] = hand_train[c], hand_eval[c], "hand"
@@ -142,7 +172,8 @@ NATURAL_V2_T12 = {c: w for c, w in NATURAL.items() if TIER[c] in (1, 2)}
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 TIMES = ["9am", "10:30am", "just after noon", "2pm", "4:45pm", "6pm"]
 
-def resolve(field: str, cust: dict, txn: dict, rng: random.Random) -> str:
+def resolve(field: str, cust: dict, txn: dict, rng: random.Random,
+            train: bool = True, company: str | None = None) -> str:
     y, m, d = txn["txn_date"].split("-")
     return {
         "person_first": cust["relative_name"].split()[0],
@@ -157,11 +188,13 @@ def resolve(field: str, cust: dict, txn: dict, rng: random.Random) -> str:
         "relationship": cust["relationship_type"],
         "city": cust["city"],
         "city_state": f"{cust['city']}, {cust['state']}",
-        "employer": cust["employer"],
-        "life_event": cust["life_event"],
-        "protected": cust["protected_attr"],
-        "health": cust["health_procedure"],
-        "bank": cust["third_party_bank"],
+        # Drawn from TRAIN/EVAL-disjoint pools so value memorisation shows up as
+        # a number instead of hiding (decision 010).
+        "employer": rng.choice(m2_values.split_pool(m2_values.EMPLOYERS, train)),
+        "life_event": rng.choice(m2_values.split_pool(m2_values.LIFE_EVENTS, train)),
+        "protected": rng.choice(m2_values.split_pool(m2_values.PROTECTED, train)),
+        "health": rng.choice(m2_values.split_pool(m2_values.HEALTH, train)),
+        "bank": m2_values.pick_bank(rng, company, train),
         "amount": f"${txn['amount']:.2f}",
         "amount_bare": f"{txn['amount']:.2f}",
         "date": rng.choice([f"{int(m)}/{int(d)}/{y}", f"{m}/{d}/{y}", f"{int(m)}/{int(d)}/{y[2:]}"]),
@@ -170,29 +203,34 @@ def resolve(field: str, cust: dict, txn: dict, rng: random.Random) -> str:
         "time": rng.choice(TIMES),
     }[field]
 
-def render(template: str, cat: str, cust: dict, txn: dict, rng: random.Random):
+def render(template: str, cat: str, cust: dict, txn: dict, rng: random.Random,
+           train: bool = True, company: str | None = None):
     """Split a template into literal parts and (category, value) parts."""
     parts, last = [], 0
     for m in FIELD.finditer(template):
         if m.start() > last:
             parts.append(template[last : m.start()])
-        parts.append((cat, resolve(m.group(1), cust, txn, rng)))
+        parts.append((cat, resolve(m.group(1), cust, txn, rng, train, company)))
         last = m.end()
     if last < len(template):
         parts.append(template[last:])
     return parts
 
-def inject(narrative, cats, templates, cust, txn, rng):
+def inject(narrative, cats, templates, cust, txn, rng, train=True, company=None, n_negatives=0):
     """
     Splice one carrier sentence per sampled category into the narrative at
     sentence boundaries, building the output in a single forward pass so recorded
     offsets are exact by construction rather than by later adjustment.
     """
     sentences = [s for s in SENT_SPLIT.split(narrative.strip()) if s] or [narrative.strip()]
-    slots = sorted(rng.sample(range(len(sentences) + 1), min(len(cats), len(sentences) + 1)))
-    plan: dict[int, list[str]] = {}
-    for slot, cat in zip(slots, cats[: len(slots)]):
-        plan.setdefault(slot, []).append(cat)
+    # Hard negatives ride in the same slot machinery but carry no label.
+    items = [("pii", c) for c in cats] + [
+        ("neg", rng.choice(HARD_NEGATIVES)) for _ in range(n_negatives)]
+    rng.shuffle(items)
+    slots = sorted(rng.sample(range(len(sentences) + 1), min(len(items), len(sentences) + 1)))
+    plan: dict[int, list[tuple[str, str]]] = {}
+    for slot, item in zip(slots, items[: len(slots)]):
+        plan.setdefault(slot, []).append(item)
 
     out: list[str] = []
     spans: list[dict] = []
@@ -204,9 +242,14 @@ def inject(narrative, cats, templates, cust, txn, rng):
         pos += len(text)
 
     for i in range(len(sentences) + 1):
-        for cat in plan.get(i, []):
+        for kind, payload in plan.get(i, []):
+            if kind == "neg":
+                emit(payload)
+                emit(" ")
+                continue
+            cat = payload
             tmpl = rng.choice(templates[cat])
-            for part in render(tmpl, cat, cust, txn, rng):
+            for part in render(tmpl, cat, cust, txn, rng, train, company):
                 if isinstance(part, tuple):
                     c, value = part
                     spans.append({
@@ -227,7 +270,8 @@ def inject(narrative, cats, templates, cust, txn, rng):
         assert text[s["start"] : s["end"]] == s["value"], "offset drift — labels would be wrong"
     return text, spans
 
-def build(name, dist, templates, narratives, customers, txn_by_cust, seed, tier3=None):
+def build(name, dist, templates, narratives, customers, txn_by_cust, seed, tier3=None,
+          train=True, companies=None, neg_rate=0.35):
     """
     `dist` is a per-span multinomial. `tier3`, when given, is a dict of
     per-narrative Bernoulli probabilities applied on top — that is how tier 3
@@ -250,11 +294,15 @@ def build(name, dist, templates, narratives, customers, txn_by_cust, seed, tier3
                 if rng.random() < prob:
                     cats.append(cat)
             rng.shuffle(cats)
-        text, spans = inject(narrative, cats, templates, cust, txn, rng)
+        company = companies[i] if companies is not None else None
+        n_neg = sum(1 for _ in range(2) if rng.random() < neg_rate)
+        text, spans = inject(narrative, cats, templates, cust, txn, rng,
+                             train=train, company=company, n_negatives=n_neg)
         if spans:
             rows.append({
                 "doc_id": f"{name}-{i:05d}", "customer_id": cust["customer_id"],
-                "txn_id": txn["txn_id"], "text": text, "spans": spans, "n_spans": len(spans),
+                "txn_id": txn["txn_id"], "text": text, "spans": spans,
+                "n_spans": len(spans), "n_hard_negatives": n_neg,
             })
     return pd.DataFrame(rows)
 
@@ -273,14 +321,17 @@ def main() -> int:
             return 1
 
     train_t, eval_t, source = load_templates(args.carriers)
-    n_mined = sum(1 for v in source.values() if v == "mined")
-    print(f"templates: {n_mined} categories from mined corpus carriers, "
-          f"{len(source)-n_mined} from hand-written")
-    for c, src in sorted(source.items()):
-        if src == "hand" and args.carriers:
-            print(f"    {c}: too few mined carriers, using hand-written")
+    from collections import Counter as _C
+    counts = _C(source.values())
+    print("carrier source per category "
+          f"(entity-site {counts['entity-site']}, mined {counts['mined']}, hand {counts['hand']}):")
+    for c, src in sorted(source.items(), key=lambda kv: (kv[1], kv[0])):
+        note = {"entity-site": "real prose, real syntactic site",
+                "mined": "determining context in the corpus",
+                "hand": "NO real carriers available — authored"}[src]
+        print(f"    {c:<18} {src:<12} {note}")
 
-    df = pd.read_parquet(NARRATIVES, columns=["narrative"])
+    df = pd.read_parquet(NARRATIVES, columns=["narrative", "Company"])
     clean = df[~df["narrative"].str.contains(MARKER, regex=True, na=False)]
     clean = clean[clean["narrative"].str.split().str.len().between(40, 600)]
 
@@ -295,7 +346,9 @@ def main() -> int:
     print(f"deduplicated: {before:,} -> {len(clean):,} narratives "
           f"({before - len(clean):,} exact duplicates removed, {100*(before-len(clean))/before:.1f}%)")
 
-    pool = clean.sample(frac=1.0, random_state=SEED)["narrative"].tolist()
+    shuffled = clean.sample(frac=1.0, random_state=SEED)
+    pool = shuffled["narrative"].tolist()
+    pool_co = shuffled["Company"].tolist()
 
     need = args.train + args.eval
     if len(pool) < need:
@@ -305,6 +358,8 @@ def main() -> int:
     # NARRATIVE SPLIT — done before anything is generated, so it cannot leak.
     train_pool = pool[: args.train]
     eval_pool = pool[args.train : args.train + args.eval]
+    train_co = pool_co[: args.train]
+    eval_co = pool_co[args.train : args.train + args.eval]
     assert not (set(train_pool) & set(eval_pool)), "narrative leak"
 
     customers = pd.read_parquet(SYN / "customers.parquet").to_dict("records")
@@ -328,8 +383,10 @@ def main() -> int:
 
     summaries = []
     for name, dist, tmpl, npool, seed, tier3 in sets:
+        is_train = name == "train"
         name = name + args.suffix
-        out = build(name, dist, tmpl, npool, customers, txn_by_cust, seed, tier3)
+        out = build(name, dist, tmpl, npool, customers, txn_by_cust, seed, tier3,
+                    train=is_train, companies=(train_co if is_train else eval_co))
         out.to_parquet(SYN / f"injected_{name}.parquet", index=False)
         counts: dict[str, int] = {}
         for spans in out["spans"]:

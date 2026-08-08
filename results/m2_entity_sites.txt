@@ -1,0 +1,44 @@
+M2 — carriers from real entity sites in clean narratives
+======================================================================
+
+narratives scanned: 20,153   seed 20260806
+
+For the tier 2 categories carrier mining cannot reach, because English
+rarely names a contextual identifier. Real prose, real syntactic
+position, exact label — no category estimation anywhere.
+
+  category              train     eval   usable?
+  LOCATION_FINE           387      141       yes
+  ORG_THIRD_PARTY       5,000    2,491       yes
+  PERSON                  474      196       yes
+
+----------------------------------------------------------------------
+SITES SKIPPED
+
+  not exactly one usable entity             88,538
+  ORG is the complained-about company       12,168
+  ORG is a regulator/bureau/network          1,284
+  degenerate entity                            400
+
+'ORG is the complained-about company' is the guard that matters.
+DEFINITIONS.md says that company is NOT personal information — it is a
+structured field of the record. Without the guard the injector would
+label it third-party PII and train a rule DEFINITIONS.md forbids.
+
+----------------------------------------------------------------------
+THE BIAS THIS INTRODUCES
+
+Sites are chosen by spaCy, so spaCy is later tested partly on positions
+it selected. That INFLATES the spaCy baseline — the conservative
+direction for this project, since it makes the baseline harder to beat.
+Reported wherever these categories appear.
+
+----------------------------------------------------------------------
+SAMPLES
+
+  LOCATION_FINE:
+    I understand [[city]] initiated the action, however they are the credit card issuer and I contacted them with 
+  ORG_THIRD_PARTY:
+    I purchased several items and used my [[bank]] Credit card.
+  PERSON:
+    If [[person_full]] ( with whom I 've never done business ) had access to both my cell phone # and my home addr
