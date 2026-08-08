@@ -61,10 +61,25 @@ $(RESULTS)/m2_synthetic_summary.txt:
 $(RESULTS)/m2_injection_summary.txt: $(RESULTS)/m2_category_distribution.txt $(RESULTS)/m2_synthetic_summary.txt
 	$(PY) scripts/m2_inject.py
 
+.PHONY: m3
+m3: $(RESULTS)/m3_comparison.txt  ## M3: train the model and compare every method
+
+models/airlock-encoder/checkpoint.json: $(RESULTS)/m2_injection_summary.txt
+	$(PY) scripts/m3_train_encoder.py
+
+$(RESULTS)/m3_comparison.txt: models/airlock-encoder/checkpoint.json
+	$(PY) scripts/m3_evaluate.py
+
+.PHONY: m4
+m4: $(RESULTS)/m4_attack.txt  ## M4: the attack — the headline
+
+$(RESULTS)/m4_attack.txt: $(RESULTS)/m3_comparison.txt
+	$(PY) scripts/m4_attack.py --set natural_v2
+
 .PHONY: repro
-repro: m0 m1 m2  ## Regenerate every number in the README from scratch
+repro: m0 m1 m2 m3 m4  ## Regenerate every number in the README from scratch
 	@echo
-	@echo "Milestones beyond M2 are not built yet."
+	@echo "Milestones beyond M4 are not built yet."
 
 .PHONY: clean
 clean:  ## Remove generated results (keeps the downloaded corpus)

@@ -209,18 +209,23 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--methods", default="encoder,presidio,spacy,regex")
     ap.add_argument("--skip-transfer", action="store_true")
+    ap.add_argument("--model-dir", default=None, help="evaluate a specific checkpoint")
     args = ap.parse_args()
     methods = args.methods.split(",")
 
-    import spacy
-    from presidio_analyzer import AnalyzerEngine
+    global MODEL_DIR
+    if args.model_dir:
+        MODEL_DIR = Path(args.model_dir)
+
     from transformers import AutoModelForTokenClassification, AutoTokenizer
 
     dev = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     nlp = analyzer = model = tok = None
     if "spacy" in methods:
+        import spacy
         nlp = spacy.load("en_core_web_lg")
     if "presidio" in methods:
+        from presidio_analyzer import AnalyzerEngine
         analyzer = AnalyzerEngine()
     if "encoder" in methods:
         if not MODEL_DIR.exists():
