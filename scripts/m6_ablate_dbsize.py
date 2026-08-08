@@ -40,6 +40,20 @@ def main() -> int:
 
     rows = []
     original = T.N_CUSTOMERS
+    # try/finally: this script REGENERATES the canonical synthetic database at
+    # each size. If it dies halfway the repo would be left holding a database of
+    # the wrong size, and every later M4 run would silently use it. Restoring in
+    # a finally block makes that impossible rather than unlikely.
+    try:
+        rows = _sweep(T, rows)
+    finally:
+        T.N_CUSTOMERS = original
+        T.main()
+        print(f"\ncanonical database restored at {original:,} customers")
+    return _write(rows)
+
+
+def _sweep(T, rows):
     for n in SIZES:
         print(f"\n=== database with {n:,} customers ===", flush=True)
         T.N_CUSTOMERS = n
@@ -62,9 +76,10 @@ def main() -> int:
             print(f"  {x['method']:<10} U {x['U_unique_pct']:5.1f}%  "
                   f"K {x['K_smallset_pct']:5.1f}%  fp {x['attacker_fp_pct']:4.1f}%", flush=True)
 
-    T.N_CUSTOMERS = original
-    T.main()  # restore the canonical database so nothing downstream is surprised
+    return rows
 
+
+def _write(rows):
     out = pd.DataFrame(rows)
     out.to_csv(RESULTS / "m6_dbsize.csv", index=False)
     L = ["M6 — does re-identification survive a bigger database?", "=" * 66, "",

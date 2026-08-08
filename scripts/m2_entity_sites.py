@@ -80,7 +80,17 @@ LABEL_MAP = {
     "GPE": ("LOCATION_FINE", "city"),
     "LOC": ("LOCATION_FINE", "city"),
     "FAC": ("LOCATION_FINE", "city"),
+    # TIME covers "2pm", "the morning". DATE covers "Tuesday", "last week".
+    # TEMPORAL was the one well-powered category that got NO real carriers, and
+    # the only one that did not improve — 3.1% against 96.8% for both baselines.
+    # Determining-context mining cannot reach it (no English phrase announces
+    # "a weekday follows"), so it needs the same entity-site treatment that took
+    # ORG_THIRD_PARTY from 0.1% to 45.0%.
+    "TIME": ("TEMPORAL", "time"),
 }
+
+# spaCy tags weekday names as DATE, not TIME, so they are matched explicitly.
+WEEKDAY_RE = re.compile(r"\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b")
 
 # Generic tokens spaCy frequently mislabels as organisations in this corpus.
 STOPWORD_ENTITIES = {
@@ -121,10 +131,17 @@ def main() -> int:
             if not (MIN_WORDS <= len(text.split()) <= MAX_WORDS):
                 continue
             ents = [e for e in sent.ents if e.label_ in LABEL_MAP]
-            if len(ents) != 1:
-                skipped["not exactly one usable entity"] += 1
+            for m in WEEKDAY_RE.finditer(text):
+                ents.append(type("E", (), {"label_": "TIME", "text": m.group(0),
+                                           "start_char": sent.start_char + m.start()})())
+            if not ents:
+                skipped["no usable entity"] += 1
                 continue
-            e = ents[0]
+            # Previously this required EXACTLY one entity, which threw away
+            # 88,538 sentences and left PERSON with 474 carriers against
+            # ORG_THIRD_PARTY's 5,000. One entity is picked per sentence and the
+            # rest are left alone, so the label stays exact while the yield rises.
+            e = ents[doc_id % len(ents)]
             cat, field = LABEL_MAP[e.label_]
             surface = e.text.strip()
             low = surface.lower()

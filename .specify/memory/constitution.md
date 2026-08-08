@@ -126,9 +126,16 @@ repository may suggest that Airlock satisfies any regulation.
 No deployment. No hosting, no service, no Docker orchestration beyond what `make repro` needs.
 The code is the artifact.
 
-**Inference** runs on an M1 MacBook with 16GB of memory and no GPU. A design whose *inference*
-needs more than that is out of scope regardless of its merits, because the deployment premise is
-a bank running the model on its own hardware.
+**The redactor runs inside the company's trust boundary.** That is the premise, and it is the
+only hardware constraint that carries the privacy argument — per
+[decision 012](../../DECISIONS/012-the-premise-is-a-trust-boundary-not-a-laptop.md), "inside"
+means infrastructure the company controls (its own VPC or account), not a physical building and
+not a laptop. The brief's actual argument — *if you could send the text out to be checked, you
+would not have needed to check it* — is about position relative to that boundary, and survives.
+
+**Laptop inference is a demonstration, not the thesis.** Latency and memory on an M1 are measured
+and published so a reader knows the floor, but a design is not out of scope merely for needing
+more than a laptop.
 
 **Training** may run on rented GPU, per [decision 011](../../DECISIONS/011-training-moves-to-rented-gpu.md).
 The premise is that the *data* cannot leave the building, which constrains inference; the

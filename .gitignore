@@ -33,3 +33,11 @@ wandb/
 .venv/
 .venv-*/
 models/
+
+# Secrets — never committed. See .secrets/README.md
+.secrets/
+!.secrets/README.md
+!.secrets/env.example
+.env
+*.pem
+*.key

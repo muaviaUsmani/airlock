@@ -11,11 +11,18 @@ A bank has hundreds of thousands of written customer complaints. It wants a fron
 analyse them. It cannot send them, because the text is full of personal information that is not
 allowed to leave the building.
 
-So something has to strip that information out first — and that something has to run locally,
-because *if you could send the text out to be checked, you would not have needed to check it.*
+So something has to strip that information out first — and that something has to run **inside
+the company's own trust boundary**, because *if you could send the text out to be checked, you
+would not have needed to check it.*
 
-Airlock is that something. It is a small model that **runs inference on an M1 MacBook with no
-GPU** — that is the claim, and it is measured on that machine.
+"Inside the boundary" means infrastructure the company controls: its own VPC, its own cloud
+account, under its own contracts. It does **not** mean a laptop
+([decision 012](DECISIONS/012-the-premise-is-a-trust-boundary-not-a-laptop.md)). Airlock is
+measured on an M1 because that is a useful floor to know and a good demo, not because a laptop is
+what protects the data.
+
+Airlock is that something. It is a small model that runs wherever the company's boundary is —
+and small enough that inference on an M1 MacBook with no GPU is measured here as the floor.
 
 *Training* uses a rented GPU (~$0.15 an hour, about 70 minutes for every run in this project).
 That does not weaken the privacy argument: the training data is public CFPB text with synthetic
