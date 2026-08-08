@@ -122,6 +122,49 @@ The real attack has to extract those values from redacted prose rather than bein
 
 ---
 
+## First result: the distribution decides the headline
+
+Before the model exists, the attack already produced its most important number — and it is about
+measurement, not redaction.
+
+The attack was run twice on identical narratives with an identical attacker. The only difference
+was where the tier 3 injection frequencies came from.
+
+| injected set | tier 3 frequencies from | raw-text U |
+|---|---|---:|
+| `natural` | the CFPB `XXXX` markers | **8.6%** |
+| `natural_v2` | counted from surviving text | **36.9%** |
+
+**A 4.3x difference, from a choice that looks like bookkeeping.**
+
+The cause is [decision 007](../DECISIONS/007-tier3-frequencies-cannot-come-from-markers.md).
+Markers record what the CFPB *redacted*. Tier 3 is by definition what it *does not* redact — so
+asking the marker oracle how often complaints mention money returns 2.5%, when counting the text
+directly returns **44.2%**. The oracle is not wrong; it faithfully reports that money is almost
+never redacted. It was asked a question it cannot answer.
+
+`natural` is kept and published rather than corrected away, because it is what following the
+brief's instruction literally produces. **An oracle built from redaction decisions cannot tell
+you about the things nobody redacted**, and a headline built on one is several times too small.
+
+### What the numbers look like so far
+
+At the pre-registered configuration, on `natural_v2`:
+
+| method | U unique | K set<5 | R rank-1 | attacker FP |
+|---|---:|---:|---:|---:|
+| raw | 36.9% | 44.3% | 37.0% | 0.5% |
+| regex | 25.7% | 32.7% | 26.0% | 0.1% |
+
+Read the regex row carefully. A pattern-based redactor — which strips card numbers, emails,
+phones, addresses and dollar amounts — removes only about **a third** of the re-identification
+risk. Two thirds of the customers remain findable from what a regular expression considers
+harmless.
+
+Presidio, spaCy and Airlock rows follow. The encoder row is pending M3.
+
+---
+
 ## The decision that blocks M4
 
 **How the adversary matches is open fork #3 in the brief, and is not decided.**

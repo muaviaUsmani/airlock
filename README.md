@@ -40,6 +40,14 @@ belongs to. That attack is the headline result.
 > pattern-based detection at all, which is why the like-for-like comparison has to happen on
 > injected data. Details in [docs/03-baselines.md](docs/03-baselines.md).
 >
+> **And the result that surprised us most:** running the same attack on the same narratives with
+> the same attacker, and changing only where the injection frequencies came from, moved the
+> re-identification rate from **8.6% to 36.9%**. Frequencies derived from the CFPB's redaction
+> markers say complaints mention money 2.5% of the time; counting the text says **44.2%**. The
+> markers only record what was *removed*, and the fields that enable re-identification are
+> precisely the ones nobody removes. Details in
+> [docs/05-attack.md](docs/05-attack.md).
+>
 > **And what M2 found:** in the synthetic transaction database, an exact date identifies nobody
 > (479 customers share one) and a merchant identifies nobody (1,329 do). Put an amount, a date
 > and a merchant together and you reach **99.7% uniqueness**. None of the three is personal
