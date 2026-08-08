@@ -10,18 +10,18 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-python -c "import torch; assert torch.cuda.is_available(); \
+/venv/main/bin/python -c "import torch; assert torch.cuda.is_available(); \
 print('gpu:', torch.cuda.get_device_name(0))"
 
 for SEED in 20260806 20260807 20260808; do
   # CONTROL: the original authored-carrier data, so the comparison has a
   # baseline trained on this hardware rather than across two platforms.
-  python -u scripts/m3_train_encoder.py --train-set train \
+  /venv/main/bin/python -u scripts/m3_train_encoder.py --train-set train \
       --out "encoder-authored-s${SEED}" --seed "$SEED" --bf16
 
   # TREATMENT: hardened injector — real carriers, split value pools, hard
   # negatives (decision 010).
-  python -u scripts/m3_train_encoder.py --train-set train_hard \
+  /venv/main/bin/python -u scripts/m3_train_encoder.py --train-set train_hard \
       --out "encoder-hard-s${SEED}" --seed "$SEED" --bf16
 done
 

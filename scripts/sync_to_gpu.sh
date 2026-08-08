@@ -20,27 +20,29 @@ set -euo pipefail
 
 HOST="${1:?ssh host, e.g. ssh5.vast.ai}"
 PORT="${2:?ssh port, e.g. 41234}"
+KEY="${SSH_KEY:-$HOME/.ssh/airlock_vast}"     # dedicated key, created for this
 REMOTE="root@${HOST}"
+SSH="ssh -i $KEY -o StrictHostKeyChecking=accept-new"
 DEST="/workspace/airlock"
 
 echo "==> checking connectivity"
-ssh -p "$PORT" -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE" \
+$SSH -p "$PORT" -o BatchMode=yes -o ConnectTimeout=15 "$REMOTE" \
     'echo connected; nvidia-smi --query-gpu=name,memory.total --format=csv,noheader'
 
 echo "==> creating $DEST"
-ssh -p "$PORT" "$REMOTE" "mkdir -p $DEST/data/synthetic $DEST/results $DEST/models"
+$SSH -p "$PORT" "$REMOTE" "mkdir -p $DEST/data/synthetic $DEST/results $DEST/models"
 
 echo "==> uploading (size shown below, should be ~150-250 MB)"
 du -ch scripts requirements.txt data/synthetic/injected_*.parquet | tail -1
-rsync -az --info=progress2 -e "ssh -p $PORT" \
+rsync -az -e "$SSH -p $PORT" \
       scripts requirements.txt "$REMOTE:$DEST/"
-rsync -az --info=progress2 -e "ssh -p $PORT" \
+rsync -az -e "$SSH -p $PORT" \
       data/synthetic/injected_*.parquet "$REMOTE:$DEST/data/synthetic/"
 
 echo "==> installing deps (torch is usually preinstalled on vast pytorch images)"
-ssh -p "$PORT" "$REMOTE" "cd $DEST && python -m pip install -q --upgrade \
+$SSH -p "$PORT" "$REMOTE" "cd $DEST && python -m pip install -q --upgrade \
     'transformers>=4.44' 'pandas>=2.2' pyarrow accelerate sentencepiece protobuf"
 
 echo
 echo "Ready. Train with:"
-echo "  ssh -p $PORT $REMOTE 'cd $DEST && bash scripts/train_all_seeds.sh'"
+echo "  $SSH -p $PORT $REMOTE 'cd $DEST && bash scripts/train_all_seeds.sh'"

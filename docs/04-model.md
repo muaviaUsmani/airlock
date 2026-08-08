@@ -39,7 +39,8 @@ Resolved in [decision 006](../DECISIONS/006-model-architecture.md): **build both
 | task | token classification, BIO over the 16 categories in [DEFINITIONS.md](../DEFINITIONS.md) |
 | labels | 33 (`O` plus `B-`/`I-` per category) |
 | training data | 15,000 injected narratives, 61,483 spans |
-| hardware | M1 MacBook, 16GB, MPS, no GPU |
+| training hardware | rented RTX 3090, 24GB ([decision 011](../DECISIONS/011-training-moves-to-rented-gpu.md)) |
+| inference hardware | **M1 MacBook, 16GB, no GPU** — where the claim is measured |
 | on disk | 376 MB |
 
 **Why an encoder can do this at all.** Marking which parts of a text are personal information is

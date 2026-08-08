@@ -126,8 +126,15 @@ repository may suggest that Airlock satisfies any regulation.
 No deployment. No hosting, no service, no Docker orchestration beyond what `make repro` needs.
 The code is the artifact.
 
-All work runs on an M1 MacBook with 16GB of memory and no GPU. A design that needs more than
-that is out of scope regardless of its merits.
+**Inference** runs on an M1 MacBook with 16GB of memory and no GPU. A design whose *inference*
+needs more than that is out of scope regardless of its merits, because the deployment premise is
+a bank running the model on its own hardware.
+
+**Training** may run on rented GPU, per [decision 011](../../DECISIONS/011-training-moves-to-rented-gpu.md).
+The premise is that the *data* cannot leave the building, which constrains inference; the
+training data here is public CFPB text with synthetic personal information we generated
+ourselves, so there is nothing confidential in it. Inference latency and memory are still
+measured on the M1, because that is the claim being made.
 
 ## Decided, And Not To Be Revisited
 
@@ -138,7 +145,9 @@ implementation choice:
 - The `XXXX` markers are the recall oracle; injection is the precision oracle.
 - The transaction system is a linkage adversary and stays minimal.
 - Re-identification rate is the headline metric, not span-level F1.
-- Everything runs locally on the M1, no GPU.
+- Inference runs locally on the M1, no GPU. **Amended 2026-08-08** — training may use rented
+  GPU; see [decision 011](../../DECISIONS/011-training-moves-to-rented-gpu.md). The original
+  wording, "everything runs locally on the M1", was revisited deliberately by the human.
 - Structured PII stays in the evaluation even though Presidio wins that row.
 
 ## Development Workflow

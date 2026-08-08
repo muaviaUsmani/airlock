@@ -14,7 +14,14 @@ allowed to leave the building.
 So something has to strip that information out first — and that something has to run locally,
 because *if you could send the text out to be checked, you would not have needed to check it.*
 
-Airlock is that something. It is a small model that runs on an M1 MacBook with no GPU.
+Airlock is that something. It is a small model that **runs inference on an M1 MacBook with no
+GPU** — that is the claim, and it is measured on that machine.
+
+*Training* uses a rented GPU (~$0.15 an hour, about 70 minutes for every run in this project).
+That does not weaken the privacy argument: the training data is public CFPB text with synthetic
+personal information we generated ourselves, so nothing confidential goes anywhere. Only the
+deployed model has to stay local. See
+[decision 011](DECISIONS/011-training-moves-to-rented-gpu.md).
 
 The interesting part is not the redaction. It is the **measurement**. Anyone can claim they
 removed the personal information. Airlock builds a synthetic transaction database and then
