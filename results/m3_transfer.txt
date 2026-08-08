@@ -1,0 +1,49 @@
+M3 — transfer to real prose (surrogate-filled)
+======================================================================
+
+2,492 real CFPB narratives, 10,543 scored spans
+
+Real text a human wrote, redacted where a human decided personal
+information was, refilled with values whose positions we recorded.
+Contains NONE of the injector's carrier templates, so nothing scored
+here can be explained by template memorisation.
+
+This REPLACES the earlier marker-based transfer test, which asked
+methods to flag XXXX itself and therefore rewarded exactly the
+degenerate behaviour M1 said must not be learned.
+
+  method         recall  precision       f1   cat acc
+  encoder         59.7%      94.6%    73.2%     99.6%
+  presidio        77.4%      52.7%    62.7%       n/a
+  spacy           43.5%      17.6%    25.0%       n/a
+  regex            3.5%       7.4%     4.8%       n/a
+
+----------------------------------------------------------------------
+PER-CATEGORY RECALL
+
+  category           tier       n    encoder   presidio      spacy      regex
+  ACCOUNT_ID            1     714      28.0%      21.6%      25.5%       0.0%
+  CASE_REF              1     176      85.2%      99.4%      33.0%       0.0%
+  CONTACT               1     122      78.7%      92.6%       7.4%     100.0%
+  GOV_ID                1       2     100.0%     100.0%       0.0%     100.0%
+  PERSON                1     425      50.8%      97.4%      97.4%       0.0%
+  EMPLOYER              2       9      66.7%       0.0%     100.0%       0.0%
+  HEALTH                2       3      33.3%     100.0%     100.0%       0.0%
+  LIFE_EVENT            2       9       0.0%       0.0%      33.3%       0.0%
+  LOCATION_FINE         2      87      56.3%      85.1%      87.4%       0.0%
+  ORG_THIRD_PARTY       2     647       0.8%       0.5%      75.4%       0.0%
+  PROTECTED_ATTR        2      56      53.6%      21.4%      21.4%       0.0%
+  RELATIONSHIP          2      16       6.2%       0.0%       0.0%       0.0%
+  AMOUNT                3     246      58.5%       1.2%      82.9%     100.0%
+  DATE                  3   7,607      69.9%      89.8%      35.7%       0.0%
+  MERCHANT              3      44      88.6%      20.5%     100.0%       0.0%
+  TEMPORAL              3     380       7.9%      97.1%      97.4%       0.0%
+
+LIMITATIONS
+
+  Only markers whose category context can estimate are filled (~46.5%).
+  The rest stay XXXX and are never scored, for or against anyone.
+  Predictions touching an unfilled marker are dropped from the
+  false-positive count, since what was there is unknown.
+  Category estimates come from context rules and can be wrong; a
+  surrogate filled under the wrong category tests the wrong thing.

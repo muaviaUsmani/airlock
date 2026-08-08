@@ -292,6 +292,7 @@ def main() -> int:
         for m in methods:
             preds, secs = run(m, texts)
             r = score(truths, preds, want_category=False)
+            r["seconds"] = secs
             report[("transfer", m)] = r
             print(f"  {m:<10} recall {100*r['recall']:5.1f}%  ({secs:.0f}s)", flush=True)
             rows.append({"dataset": "transfer", "method": m, "category": "ALL", "tier": "",
@@ -322,7 +323,7 @@ def main() -> int:
             L.append(f"  {'method':<12} {'recall':>8} {'ms/narrative':>14}")
             for m in present:
                 r = report[(dataset, m)]
-                L.append(f"  {m:<12} {100*r['recall']:>7.1f}% {1000*r['seconds']/max(TRANSFER_N,1):>13.1f}")
+                L.append(f"  {m:<12} {100*r[chr(39)+chr(39)]:>7.1f}%")
         else:
             L.append(f"  {'method':<12} {'recall':>8} {'precision':>10} {'f1':>8} {'cat acc':>9} {'ms/narr':>9}")
             for m in present:

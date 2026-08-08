@@ -1,7 +1,7 @@
 # What was trained, and why that architecture
 
-**Status: M3 in progress. Branch A (encoder) is training. Numbers appear here only once a
-committed script has produced them.**
+**Status: branch A (encoder) is trained and measured. The result does not support the project's
+central claim, and this page says so before it says anything else.**
 
 ---
 
@@ -131,6 +131,88 @@ The virtual environment was **x86_64 running under Rosetta** on an arm64 machine
 torch at 2.2.2 — below what transformers 5.x requires — and provides no real Metal acceleration.
 A project whose entire premise is *"runs on an M1 laptop"* was not running on the M1. Rebuilt
 native: torch 2.13.0, MPS available. `requirements.txt` records the constraint.
+
+---
+
+## Results
+
+### On injected data, the encoder wins comfortably
+
+`stratified` — held-out carrier templates, equal power per category:
+
+| method | recall | precision | F1 |
+|---|---:|---:|---:|
+| **encoder** | **90.1%** | **96.8%** | **93.3%** |
+| presidio | 46.2% | 47.7% | 46.9% |
+| spacy | 54.9% | 35.6% | 43.2% |
+| regex | 17.4% | 57.3% | 26.7% |
+
+Note the regex row. At M1, scored against the `XXXX` markers, it was **0.0% by construction** —
+a card-number pattern looks for digits and a marker is the letter X. Here it scores 17.4%. That
+is [decision 004](../DECISIONS/004-two-injection-distributions.md) paying off: injected data can
+score a whole method class the free labels physically cannot.
+
+### The template-memorisation gap
+
+| | encoder recall |
+|---|---:|
+| `seen_templates` (training phrasings) | 98.8% |
+| `stratified` (held-out phrasings) | 90.1% |
+| **gap** | **8.7 pts** |
+
+A modest gap, which at the time read as good news. It was not, and the reason is below.
+
+### On real prose, the claim does not hold
+
+2,492 real narratives, 10,543 spans, no carrier templates anywhere in the text
+([decision 008](../DECISIONS/008-the-transfer-metric-was-invalid.md)):
+
+| method | recall | precision | F1 | category accuracy |
+|---|---:|---:|---:|---:|
+| presidio | **77.4%** | 52.7% | 62.7% | n/a |
+| **encoder** | 59.7% | **94.6%** | **73.2%** | **99.6%** |
+| spacy | 43.5% | 17.6% | 25.0% | n/a |
+| regex | 3.5% | 7.4% | 4.8% | n/a |
+
+The encoder wins F1 and precision by a wide margin and labels almost perfectly when it fires.
+**Presidio finds more.** And encoder recall falls from **90.1% on injected text to 59.7% on real
+prose** — a 30-point drop that is the honest size of the synthetic-to-real gap.
+
+### The categories Airlock was built for
+
+| category | tier | n | encoder | presidio | spacy |
+|---|---:|---:|---:|---:|---:|
+| ORG_THIRD_PARTY | 2 | 647 | **0.8%** | 0.5% | 75.4% |
+| LOCATION_FINE | 2 | 87 | 56.3% | 85.1% | 87.4% |
+| PROTECTED_ATTR | 2 | 56 | **53.6%** | 21.4% | 21.4% |
+| PERSON | 1 | 425 | 50.8% | 97.4% | 97.4% |
+| TEMPORAL | 3 | 380 | **7.9%** | 97.1% | 97.4% |
+| DATE | 3 | 7,607 | 69.9% | 89.8% | 35.7% |
+
+`ORG_THIRD_PARTY` at 0.8% on 647 spans is a well-powered failure. `TEMPORAL` at 7.9% is another.
+`PERSON` at 50.8% against 97.4% is a third, on the easiest category there is. Only
+`PROTECTED_ATTR` shows the hoped-for pattern.
+
+Categories below about n=50 — `RELATIONSHIP` (16), `LIFE_EVENT` (9), `EMPLOYER` (9), `HEALTH`
+(3), `GOV_ID` (2) — support no claim in either direction and are shown only so the table is not
+silently truncated. `DATE` is 7,607 of 10,543 spans, so the aggregate row is mostly about dates.
+
+### Why, as far as the evidence supports
+
+The encoder learned **category-specific carrier contexts**, not the entity types.
+
+`ORG_THIRD_PARTY` surrogates come from the same ten bank names it trained on, so the failure is
+contextual rather than lexical. Trained on *"I also contacted Citibank to see if they could
+help"*, it does not recognise the same name in prose a customer actually wrote.
+
+**Which means the held-out-template control was not sufficient.** It showed an 8.7-point gap and
+looked reassuring, but every template in that set was written by the same generator in the same
+register. Held-out templates test memorisation of specific strings. They do not test transfer to
+a different author. Real prose was the only test that could catch this, and it did.
+
+The prime suspect is the **injector**, not the architecture — which makes the generative branch
+a more interesting experiment than it was, because it would separate "this architecture" from
+"this training data".
 
 ---
 
