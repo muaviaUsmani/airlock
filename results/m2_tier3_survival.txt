@@ -1,0 +1,33 @@
+M2 — tier 3 survival in published CFPB narratives
+================================================================
+
+narratives examined: 224,952
+
+Counted directly from surviving text. No oracle involved — tier 3 is
+what the CFPB does NOT redact, so the values are still there to count.
+This is the measurement decision 007 substitutes for the marker-derived
+tier 3 frequencies, which are near zero by construction.
+
+  category       narratives     share
+  AMOUNT             99,459     44.2%
+  DATE               90,937     40.4%
+  MERCHANT           33,297     14.8%
+  TEMPORAL           10,575      4.7%
+
+----------------------------------------------------------------
+COMPARISON WITH THE MARKER-DERIVED ESTIMATE
+
+  category       from markers   from survival    ratio
+  AMOUNT                 2.5%           44.2%    17.7x
+  DATE                  70.4%           40.4%     0.6x
+  MERCHANT               0.4%           14.8%    37.0x
+  TEMPORAL               3.8%            4.7%     1.2x
+
+AMOUNT is the one that matters. The markers say complaints almost never
+mention money; the text says otherwise. The markers are not wrong — they
+faithfully report that money is almost never REDACTED. They were simply
+asked a question they cannot answer.
+
+DATE runs the other way: over-represented in the marker estimate because
+XX/XX/XXXX labels itself (decision 004), and dates ARE redacted, so both
+biases stack on that row.

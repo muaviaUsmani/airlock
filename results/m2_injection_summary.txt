@@ -61,6 +61,29 @@ NATURAL
     HEALTH             tier 2       10    0.1%
 
 ----------------------------------------------------------------
+NATURAL_V2
+
+  narratives   4,000   spans  18,700   spans/narrative  4.7
+  tier 1  51.9%   tier 2  28.6%   tier 3  19.5%
+
+    ACCOUNT_ID         tier 1    4,606   24.6%
+    ORG_THIRD_PARTY    tier 2    4,045   21.6%
+    PERSON             tier 1    2,925   15.6%
+    AMOUNT             tier 3    1,449    7.7%
+    DATE               tier 3    1,407    7.5%
+    CASE_REF           tier 1    1,377    7.4%
+    CONTACT            tier 1      716    3.8%
+    LOCATION_FINE      tier 2      692    3.7%
+    MERCHANT           tier 3      497    2.7%
+    PROTECTED_ATTR     tier 2      398    2.1%
+    TEMPORAL           tier 3      300    1.6%
+    GOV_ID             tier 1       74    0.4%
+    EMPLOYER           tier 2       62    0.3%
+    LIFE_EVENT         tier 2       61    0.3%
+    RELATIONSHIP       tier 2       57    0.3%
+    HEALTH             tier 2       34    0.2%
+
+----------------------------------------------------------------
 STRATIFIED
 
   narratives   4,000   spans  17,006   spans/narrative  4.3

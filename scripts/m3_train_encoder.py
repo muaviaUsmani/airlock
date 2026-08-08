@@ -223,6 +223,18 @@ def main() -> int:
         print("  " + line, flush=True)
         log.append(line)
 
+        # Checkpoint every epoch. Saving only at the end means a run that is
+        # interrupted, or that turns out to need fewer epochs than requested,
+        # leaves nothing usable behind — and on this hardware an epoch is over
+        # two hours, so that is an expensive thing to discover late.
+        ckpt = MODELS / "airlock-encoder"
+        ckpt.mkdir(parents=True, exist_ok=True)
+        model.save_pretrained(ckpt)
+        tok.save_pretrained(ckpt)
+        (ckpt / "checkpoint.json").write_text(json.dumps(
+            {"epochs_completed": epoch + 1, "mean_loss": running / max(seen, 1)}, indent=2))
+        print(f"    checkpoint saved after epoch {epoch+1}", flush=True)
+
     total_min = (time.time() - t_start) / 60
     out_dir = MODELS / "airlock-encoder"
     out_dir.mkdir(parents=True, exist_ok=True)

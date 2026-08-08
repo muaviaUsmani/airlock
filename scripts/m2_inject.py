@@ -97,9 +97,20 @@ TIER = {
     "AMOUNT": 3, "DATE": 3, "MERCHANT": 3, "TEMPORAL": 3,
 }
 
+# NATURAL_V2 — decision 007. Tier 1 and 2 keep the marker-derived weights, but
+# tier 3 frequencies are measured directly from surviving text
+# (results/m2_tier3_survival.csv), because markers record what was REDACTED and
+# tier 3 is by definition what the CFPB does not redact. Asking the marker
+# oracle about money returns 2.5% when the text says 44.2% — a 17.7x
+# under-estimate that lands straight on the M4 headline.
+#
+# Tier 3 is expressed as a PER-NARRATIVE probability, matching how it was
+# measured (presence per narrative), rather than as a share of spans.
+TIER3_PRESENCE = {"AMOUNT": 0.442, "DATE": 0.404, "MERCHANT": 0.148, "TEMPORAL": 0.047}
+NATURAL_V2_T12 = {c: w for c, w in NATURAL.items() if TIER[c] in (1, 2)}
+
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 TIMES = ["9am", "10:30am", "just after noon", "2pm", "4:45pm", "6pm"]
-
 
 def resolve(field: str, cust: dict, txn: dict, rng: random.Random) -> str:
     y, m, d = txn["txn_date"].split("-")
@@ -128,7 +139,6 @@ def resolve(field: str, cust: dict, txn: dict, rng: random.Random) -> str:
         "time": rng.choice(TIMES),
     }[field]
 
-
 def render(template: str, cat: str, cust: dict, txn: dict, rng: random.Random):
     """Split a template into literal parts and (category, value) parts."""
     parts, last = [], 0
@@ -140,7 +150,6 @@ def render(template: str, cat: str, cust: dict, txn: dict, rng: random.Random):
     if last < len(template):
         parts.append(template[last:])
     return parts
-
 
 def inject(narrative, cats, templates, cust, txn, rng):
     """
@@ -187,8 +196,13 @@ def inject(narrative, cats, templates, cust, txn, rng):
         assert text[s["start"] : s["end"]] == s["value"], "offset drift — labels would be wrong"
     return text, spans
 
-
-def build(name, dist, templates, narratives, customers, txn_by_cust, seed):
+def build(name, dist, templates, narratives, customers, txn_by_cust, seed, tier3=None):
+    """
+    `dist` is a per-span multinomial. `tier3`, when given, is a dict of
+    per-narrative Bernoulli probabilities applied on top — that is how tier 3
+    survival was measured (presence per narrative), so that is how it is
+    reproduced. See decision 007.
+    """
     rng = random.Random(seed)
     rows = []
     for i, narrative in enumerate(narratives):
@@ -199,6 +213,12 @@ def build(name, dist, templates, narratives, customers, txn_by_cust, seed):
         txn = dict(rng.choice(txns))
         txn["last4"] = f"{rng.randint(0, 9999):04d}"
         cats = rng.choices(list(dist), weights=list(dist.values()), k=rng.randint(*SPANS_PER_NARRATIVE))
+        if tier3:
+            cats = [c for c in cats if TIER[c] != 3]
+            for cat, prob in tier3.items():
+                if rng.random() < prob:
+                    cats.append(cat)
+            rng.shuffle(cats)
         text, spans = inject(narrative, cats, templates, cust, txn, rng)
         if spans:
             rows.append({
@@ -206,7 +226,6 @@ def build(name, dist, templates, narratives, customers, txn_by_cust, seed):
                 "txn_id": txn["txn_id"], "text": text, "spans": spans, "n_spans": len(spans),
             })
     return pd.DataFrame(rows)
-
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -257,18 +276,19 @@ def main() -> int:
     print(f"clean narratives: {len(clean):,} | train {len(train_pool):,} | eval {len(eval_pool):,}\n")
 
     sets = [
-        # name,                dist,        templates, pool,       seed
-        ("train",              STRATIFIED,  train_t,   train_pool, SEED),
-        ("natural",            NATURAL,     eval_t,    eval_pool,  SEED + 1),
-        ("stratified",         STRATIFIED,  eval_t,    eval_pool,  SEED + 2),
+        # name,                dist,          templates, pool,       seed,     tier3
+        ("train",              STRATIFIED,    train_t,   train_pool, SEED,     None),
+        ("natural",            NATURAL,       eval_t,    eval_pool,  SEED + 1, None),
+        ("natural_v2",         NATURAL_V2_T12, eval_t,   eval_pool,  SEED + 1, TIER3_PRESENCE),
+        ("stratified",         STRATIFIED,    eval_t,    eval_pool,  SEED + 2, None),
         # Control: same eval narratives, but TRAIN templates. Difference against
         # `stratified` isolates template memorisation from everything else.
-        ("seen_templates",     STRATIFIED,  train_t,   eval_pool,  SEED + 2),
+        ("seen_templates",     STRATIFIED,    train_t,   eval_pool,  SEED + 2, None),
     ]
 
     summaries = []
-    for name, dist, tmpl, npool, seed in sets:
-        out = build(name, dist, tmpl, npool, customers, txn_by_cust, seed)
+    for name, dist, tmpl, npool, seed, tier3 in sets:
+        out = build(name, dist, tmpl, npool, customers, txn_by_cust, seed, tier3)
         out.to_parquet(SYN / f"injected_{name}.parquet", index=False)
         counts: dict[str, int] = {}
         for spans in out["spans"]:
@@ -313,7 +333,6 @@ def main() -> int:
     (RESULTS / "m2_injection_summary.txt").write_text(out_txt + "\n")
     print("\n" + out_txt[: out_txt.index("NATURAL")] if "NATURAL" in out_txt else out_txt)
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
