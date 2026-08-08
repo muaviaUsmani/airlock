@@ -1,0 +1,46 @@
+M3 — authored carriers vs hardened injector, on real prose
+============================================================================
+
+163 real CFPB narratives, 574 scored spans.
+Surrogate-filled (decision 008): real text, real redaction sites, values
+we chose. Contains NO carrier templates from either injector, so it is
+neutral ground for both arms.
+
+Three seeds per arm. Identical architecture and hyper-parameters — the
+ONLY difference is the training data (decision 010).
+
+----------------------------------------------------------------------------
+HEADLINE
+
+  method                       recall      precision             f1   cat acc
+  regex                   3.3%           7.2%           4.5%              n/a
+  spacy                  41.6%          14.9%          22.0%              n/a
+  presidio               77.9%          49.8%          60.8%              n/a
+  encoder (authored)      52.9% ±19.3    96.3% ± 1.4    67.0% ±16.8     99.8%
+  encoder (HARDENED)      78.6% ± 1.7    98.3% ± 0.3    87.3% ± 1.0     99.6%
+
+----------------------------------------------------------------------------
+PER-CATEGORY RECALL  (mean across seeds, ± spread)
+
+  category                n   presidio      spacy        authored        HARDENED     delta
+  ACCOUNT_ID             35      25.7%      25.7%      36.2 ±21.8      50.5 ± 1.6    +14.3
+  CASE_REF                6     100.0%      16.7%      83.3 ± 0.0     100.0 ± 0.0    +16.7
+  CONTACT                 7     100.0%       0.0%      95.2 ± 8.2     100.0 ± 0.0     +4.8
+  GOV_ID                  1     100.0%       0.0%     100.0 ± 0.0     100.0 ± 0.0     +0.0
+  PERSON                 20     100.0%     100.0%      30.0 ±13.2      75.0 ± 0.0    +45.0
+  EMPLOYER                2       0.0%      50.0%       0.0 ± 0.0      50.0 ± 0.0    +50.0
+  LOCATION_FINE           6     100.0%     100.0%      50.0 ±16.7      72.2 ± 9.6    +22.2
+  ORG_THIRD_PARTY        39       0.0%      74.4%       0.0 ± 0.0      49.6 ± 6.5    +49.6
+  PROTECTED_ATTR          6      16.7%      16.7%      38.9 ± 9.6      66.7 ± 0.0    +27.8
+  RELATIONSHIP            1       0.0%       0.0%       0.0 ± 0.0       0.0 ± 0.0     +0.0
+  AMOUNT                 11       0.0%      90.9%      39.4 ± 5.2      63.6 ± 0.0    +24.2
+  DATE                  422      89.8%      34.1%      62.2 ±24.6      87.3 ± 1.6    +25.0
+  TEMPORAL               18     100.0%     100.0%       0.0 ± 0.0       1.9 ± 3.2     +1.9
+
+----------------------------------------------------------------------------
+INFERENCE COST ON THE M1  (this is the claim, decision 011)
+
+  encoder (authored)     165 ms/narrative     6.0 narratives/sec
+  encoder (hard    )     165 ms/narrative     6.1 narratives/sec
+  model on disk          744 MB  (fp32; fp16 export would be ~372 MB)
+  peak process memory   2402 MB
