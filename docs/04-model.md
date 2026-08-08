@@ -30,6 +30,27 @@ Resolved in [decision 006](../DECISIONS/006-model-architecture.md): **build both
 
 ---
 
+## The arms
+
+Four, differing on two axes — **capacity** (how big) and **architecture** (how it works). Scaling
+one does not answer the other's question, which is why both are run.
+
+| arm | model | params | axis |
+|---|---|---:|---|
+| micro | `deberta-v3-xsmall` | 22M | capacity — the laptop-demo claim |
+| *base* | `deberta-v3-base` | 184M | *capacity waypoint — [details in 04a](04a-base-encoder.md), not a deliverable* |
+| large | `deberta-v3-large` | 434M | capacity — what staying small costs |
+| generative | `Qwen3-0.6B` + LoRA | 600M | **architecture** — reopened by [decision 012](../DECISIONS/012-the-premise-is-a-trust-boundary-not-a-laptop.md) |
+
+`base` was the first architecture trained and produced every methodological finding in this
+project, but it is a waypoint rather than an output. Its full results, what it taught, and an
+exact rebuild recipe are in **[docs/04a-base-encoder.md](04a-base-encoder.md)**.
+
+At 600M against large's 434M, the generative arm is close to **size-matched** with the biggest
+encoder — so the comparison isolates architecture rather than confounding it with capacity.
+
+---
+
 ## Branch A — the encoder
 
 | | |

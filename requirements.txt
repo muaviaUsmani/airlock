@@ -22,3 +22,4 @@ transformers>=4.44
 sentencepiece>=0.2
 protobuf>=4.25
 accelerate>=0.34
+peft>=0.11          # LoRA for the generative arm (branch B)

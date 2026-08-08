@@ -41,7 +41,7 @@ rsync -az -e "$SSH -p $PORT" \
 
 echo "==> installing deps (torch is usually preinstalled on vast pytorch images)"
 $SSH -p "$PORT" "$REMOTE" "cd $DEST && python -m pip install -q --upgrade \
-    'transformers>=4.44' 'pandas>=2.2' pyarrow accelerate sentencepiece protobuf"
+    'transformers>=4.44' 'pandas>=2.2' pyarrow accelerate sentencepiece protobuf peft"
 
 echo
 echo "Ready. Train with:"
