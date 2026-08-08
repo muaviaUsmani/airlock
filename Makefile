@@ -81,6 +81,25 @@ repro: m0 m1 m2 m3 m4  ## Regenerate every number in the README from scratch
 	@echo
 	@echo "Milestones beyond M4 are not built yet."
 
+.PHONY: prune
+prune:  ## Delete build artifacts that are regenerable — weights, archives, caches
+	@echo "Removing the downloaded archive (the extracted CSV is what gets read;"
+	@echo "bootstrap.sh re-downloads it if ever needed)..."
+	rm -f data/raw/*.zip
+	@echo "Removing superseded model weights. Every arm is rebuildable from its"
+	@echo "recipe — see docs/04a-base-encoder.md — and make repro regenerates the"
+	@echo "training data before training anything, so weights are never an input."
+	rm -rf models/airlock-encoder models/airlock-encoder-ep1
+	@echo
+	@echo "NOT removed, because published numbers currently cite them:"
+	@echo "  models/encoder-*-s*   run 'make prune-superseded' once newer arms replace them"
+	@du -sh models data/raw 2>/dev/null || true
+
+.PHONY: prune-superseded
+prune-superseded:  ## Also delete arm weights whose numbers have been superseded
+	rm -rf models/encoder-authored-s* models/encoder-hard-s*
+	@du -sh models 2>/dev/null || true
+
 .PHONY: clean
 clean:  ## Remove generated results (keeps the downloaded corpus)
 	rm -rf $(RESULTS)/*.csv $(RESULTS)/*.txt data/interim/*

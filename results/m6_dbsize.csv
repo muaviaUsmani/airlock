@@ -1,0 +1,7 @@
+customers,method,U_unique_pct,K_smallset_pct,R_rank1_pct,attacker_fp_pct
+2500,raw,19.12,20.42,19.45,1.75
+2500,presidio,0.18,0.18,0.18,0.22
+10000,raw,36.9,44.3,37.03,0.45
+10000,presidio,1.18,3.25,1.23,0.43
+40000,raw,14.27,29.9,16.28,1.35
+40000,presidio,0.05,0.25,0.1,0.3

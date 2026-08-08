@@ -32,11 +32,32 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
-SIZES = [2_500, 10_000, 40_000]
+# Sizes must be >= the number of distinct customers the injected set references,
+# or the ablation measures its own broken linkage instead of database size.
+#
+# The injector assigns customers round-robin, so 4,000 narratives touch customers
+# C000000-C003999. Regenerating the database at 2,500 leaves 1,500 narratives
+# (37.5%) pointing at customers that no longer exist — the attack cannot find
+# them, U collapses, and it looks like "small databases are safer". They are not;
+# the test was broken. That run reported 19.1% against 36.9% at 10,000, which is
+# backwards from the real effect and would have been published as a finding.
+#
+# Sizes only grow from the injection baseline. Customer i is identical at every
+# N because the generator draws sequentially from a fixed seed, so linkage is
+# preserved upward and every row stays comparable.
+SIZES = [10_000, 40_000, 160_000]
 
 
 def main() -> int:
     import m2_transactions as T
+
+    inj = pd.read_parquet(ROOT / "data" / "synthetic" / "injected_natural_v2.parquet")
+    needed = int(inj["customer_id"].str.lstrip("C").astype(int).max()) + 1
+    too_small = [n for n in SIZES if n < needed]
+    if too_small:
+        raise SystemExit(
+            f"sizes {too_small} are below the {needed:,} customers the injected set "
+            f"references; that would measure broken linkage, not database size")
 
     rows = []
     original = T.N_CUSTOMERS

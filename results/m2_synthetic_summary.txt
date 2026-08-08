@@ -3,10 +3,10 @@ M2 — synthetic card system (the adversary's database)
 
 seed: 20260806   |   NO REAL DATA — every value is generated
 
-  customers        40,000
-  cards            47,164
+  customers        10,000
+  cards            11,825
   merchants           400
-  transactions  1,437,336
+  transactions    359,375
   date window   2023-01-01 .. 2024-12-30
 
 --------------------------------------------------------------
@@ -17,17 +17,17 @@ of values held by exactly one customer — a field at 100% identifies
 outright, a field near 0% narrows very little.
 
   field                        unique   mean customers/value
-  full_name                     49.3%                    1.8
-  city                           0.0%                 1333.3
-  zip                            0.0%                 1333.3
-  employer                       0.0%                10000.0
+  full_name                     85.4%                    1.2
+  city                           0.0%                  333.3
+  zip                            0.0%                  333.3
+  employer                       0.0%                 2500.0
   phone                        100.0%                    1.0
-  card last4                     4.1%                    4.8
-  txn amount                    27.2%                   43.9
-  txn date                       0.0%                 1915.6
-  merchant name                  0.0%                 5309.9
-  amount + date                 85.9%                    1.2
-  amount + date + merchant      98.8%                    1.0
+  card last4                    52.0%                    1.7
+  txn amount                    30.7%                   16.3
+  txn date                       0.0%                  478.7
+  merchant name                  0.0%                 1328.8
+  amount + date                 96.0%                    1.0
+  amount + date + merchant      99.7%                    1.0
 
 The last three rows are the point of the project. A single amount is
 already sharply identifying; amount with date is nearly unique. Neither

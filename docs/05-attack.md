@@ -70,14 +70,30 @@ That is the gap this project exists to measure, and it is why the headline metri
 re-identification rate rather than span-level F1. A redactor can score perfectly on every name
 in the corpus and still leave every customer identifiable.
 
-### An honest caveat about that number
+### An honest caveat about that number — now measured, not assumed
 
-96% and 99.7% are properties of **this database at this size**. Uniqueness falls as the customer
-population grows — 10,000 customers is a choice, and in a bank with ten million the same
-quasi-identifiers would narrow less sharply.
+96% and 99.7% are properties of **this database at this size**, and the ablation quantifies it
+([docs/07-ablations.md](07-ablations.md)):
 
-So the re-identification rates reported at M4 are **conditioned on database size**, and
-population size is carried as an ablation axis at M6 rather than left as an unstated assumption.
+| customers | raw U | raw K (<5) | presidio U |
+|---:|---:|---:|---:|
+| 10,000 | 36.9% | 44.3% | 1.2% |
+| 40,000 | **14.3%** | 29.9% | 0.1% |
+
+**Re-identification roughly halves when the database quadruples.** Every absolute number in this
+project is therefore conditioned on a 10,000-customer database and is **optimistic for the
+attacker** — at a bank with millions of customers, raw re-identification from these
+quasi-identifiers would be materially lower than 36.9%.
+
+Two things survive the scaling, and they are what the claim rests on. The **ordering is
+unchanged**, and the gap widens rather than closes — 30x at 10,000, 143x at 40,000. And **K falls
+more slowly than U**: at 40,000 the attacker names one customer 14.3% of the time but narrows to
+fewer than five in 29.9% of cases. Population growth stops an attacker naming a person long
+before it stops them naming a shortlist, and a shortlist of four is not privacy.
+
+Airlock itself was not run at 40,000 — each extra method costs a full 28-configuration pass — so
+its 0.2% has no scaled counterpart. That gap is stated in the ablation page rather than papered
+over.
 
 ---
 
