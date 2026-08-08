@@ -73,6 +73,16 @@ ID2LABEL = {i: l for l, i in LABEL2ID.items()}
 
 
 def device() -> torch.device:
+    """
+    CUDA if present, else Apple Metal, else CPU.
+
+    Per decision 011 training may run on a rented GPU while inference latency is
+    still measured on the M1 — the laptop is the deployment claim, not the
+    training claim, and the training data is public CFPB text with synthetic
+    personal information, so nothing confidential leaves anywhere.
+    """
+    if torch.cuda.is_available():
+        return torch.device("cuda")
     if torch.backends.mps.is_available():
         return torch.device("mps")
     return torch.device("cpu")
@@ -136,13 +146,16 @@ def main() -> int:
     ap.add_argument("--model", default=BASE_MODEL)
     ap.add_argument("--train-set", default="train", help="injected_<name>.parquet to train on")
     ap.add_argument("--out", default="airlock-encoder", help="model directory name")
+    ap.add_argument("--seed", type=int, default=SEED, help="vary to measure run-to-run variance")
+    ap.add_argument("--bf16", action="store_true",
+                    help="mixed precision; CUDA only. Never fp16 — see the dtype note above.")
     args = ap.parse_args()
 
     from transformers import (AutoModelForTokenClassification, AutoTokenizer,
                               get_linear_schedule_with_warmup)
 
-    torch.manual_seed(SEED)
-    np.random.seed(SEED)
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
 
     train_path = SYN / f"injected_{args.train_set}.parquet"
     if not train_path.exists():
@@ -195,7 +208,7 @@ def main() -> int:
         f"epochs          {args.epochs}   batch {args.batch} x{GRAD_ACCUM} accum",
         f"lr              {LR}   warmup {WARMUP}",
         f"max seq length  {MAX_LEN}",
-        f"seed            {SEED}",
+        f"seed            {args.seed}",
         "",
     ]
 
@@ -206,7 +219,11 @@ def main() -> int:
         opt.zero_grad()
         for step, batch in enumerate(dl):
             batch = {k: v.to(dev) for k, v in batch.items()}
-            out = model(**batch)
+            if args.bf16 and dev.type == "cuda":
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    out = model(**batch)
+            else:
+                out = model(**batch)
             (out.loss / GRAD_ACCUM).backward()
             running += out.loss.item()
             seen += 1
