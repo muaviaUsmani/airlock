@@ -26,11 +26,12 @@ refilled by known surrogates. It contains none of either injector's carriers, so
 it is neutral ground. Scoring each arm on its own matching injected set would
 measure two different things and call it a comparison.
 
-INFERENCE COST IS MEASURED HERE, ON THE LAPTOP
-----------------------------------------------
-Per decision 011 training ran on a rented GPU, but "a model that runs on a
-laptop" is the claim, so seconds-per-narrative and peak memory are measured on
-the M1 and reported from it.
+WHERE THIS RUNS
+---------------
+Accuracy is hardware-independent — same weights, same fp32 inference, same
+argmax — so it runs wherever is fastest. Throughput and cost are a DIFFERENT
+measurement and live in m3_throughput.py, which runs on the GPU because that is
+where a deployed redactor runs (decision 012).
 
 Reads:  models/encoder-{authored,hard}-s*/
         data/interim/creditcard_narratives.parquet
@@ -109,8 +110,13 @@ def main() -> int:
                   f"precision {100*r['precision']:5.1f}%  f1 {100*r['f1']:5.1f}%", flush=True)
 
     # --- every trained model ----------------------------------------------
-    dev = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-    print(f"\nencoders on {dev} (this is the hardware the claim is about)\n", flush=True)
+    # CUDA first. This script was written when the M1 was the only target and
+    # silently fell back to CPU on a rented GPU — the eval ran with the card at
+    # 0% utilisation. Accuracy is hardware-independent so the numbers would have
+    # been right, but it would have taken hours on a box billing by the hour.
+    dev = torch.device("cuda" if torch.cuda.is_available()
+                       else "mps" if torch.backends.mps.is_available() else "cpu")
+    print(f"\nrunning on {dev}\n", flush=True)
 
     for arm in ARMS:
         dirs = sorted(MODELS.glob(f"encoder-{arm}-s*"))
