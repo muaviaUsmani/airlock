@@ -1,0 +1,77 @@
+device: cuda
+  seen_templates_hard2     3,994 narratives, 15,290 spans
+  stratified_hard2         3,999 narratives, 15,262 spans
+  natural_v2_hard2         3,997 narratives, 17,628 spans
+  __surrogate__            2,492 narratives, 10,543 spans
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 4127.87it/s]
+  micro   s20260806 seen_templates_hard2     f1  96.1%  recall  94.9%
+  micro   s20260806 stratified_hard2         f1  94.3%  recall  92.3%
+  micro   s20260806 natural_v2_hard2         f1  95.0%  recall  93.1%
+  micro   s20260806 __surrogate__            f1  85.5%  recall  76.4%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 4255.67it/s]
+  micro   s20260807 seen_templates_hard2     f1  96.7%  recall  95.3%
+  micro   s20260807 stratified_hard2         f1  94.6%  recall  92.1%
+  micro   s20260807 natural_v2_hard2         f1  95.1%  recall  92.7%
+  micro   s20260807 __surrogate__            f1  85.9%  recall  76.4%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 4735.69it/s]
+  micro   s20260808 seen_templates_hard2     f1  97.0%  recall  95.5%
+  micro   s20260808 stratified_hard2         f1  95.3%  recall  93.0%
+  micro   s20260808 natural_v2_hard2         f1  95.6%  recall  93.4%
+  micro   s20260808 __surrogate__            f1  85.0%  recall  75.1%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 2842.61it/s]
+  base2   s20260806 seen_templates_hard2     f1  98.1%  recall  97.0%
+  base2   s20260806 stratified_hard2         f1  91.3%  recall  84.9%
+  base2   s20260806 natural_v2_hard2         f1  95.4%  recall  91.9%
+  base2   s20260806 __surrogate__            f1  77.4%  recall  64.4%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 3047.10it/s]
+  base2   s20260807 seen_templates_hard2     f1  98.1%  recall  96.9%
+  base2   s20260807 stratified_hard2         f1  92.6%  recall  87.2%
+  base2   s20260807 natural_v2_hard2         f1  95.0%  recall  91.3%
+  base2   s20260807 __surrogate__            f1  83.1%  recall  71.6%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 3364.47it/s]
+  base2   s20260808 seen_templates_hard2     f1  98.2%  recall  97.0%
+  base2   s20260808 stratified_hard2         f1  92.0%  recall  86.1%
+  base2   s20260808 natural_v2_hard2         f1  95.1%  recall  91.3%
+  base2   s20260808 __surrogate__            f1  79.5%  recall  68.0%
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  56%|█████▌    | 220/392 [00:00<00:00, 2182.16it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 2427.67it/s]
+  large   s20260806 seen_templates_hard2     f1  98.4%  recall  97.0%
+  large   s20260806 stratified_hard2         f1  89.9%  recall  83.6%
+  large   s20260806 natural_v2_hard2         f1  95.1%  recall  91.4%
+  large   s20260806 __surrogate__            f1  78.0%  recall  65.2%
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  92%|█████████▏| 359/392 [00:00<00:00, 3583.53it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 3531.23it/s]
+  large   s20260807 seen_templates_hard2     f1  98.2%  recall  97.0%
+  large   s20260807 stratified_hard2         f1  92.8%  recall  87.8%
+  large   s20260807 natural_v2_hard2         f1  94.8%  recall  91.2%
+  large   s20260807 __surrogate__            f1  80.6%  recall  69.6%
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 3937.22it/s]
+  large   s20260808 seen_templates_hard2     f1  98.2%  recall  96.7%
+  large   s20260808 stratified_hard2         f1  91.8%  recall  86.0%
+  large   s20260808 natural_v2_hard2         f1  95.2%  recall  91.6%
+  large   s20260808 __surrogate__            f1  81.6%  recall  69.9%
+
+M6 — does capacity buy memorisation?
+==============================================================================
+
+4,000 narratives per set, three seeds per arm, F1 %.
+
+A transfer curve, easiest to hardest. Overfitting is a claim about the
+SHAPE of this curve: a memorising model starts high and falls further.
+
+  arm                   seen        stratified           natural         surrogate   drop 1->4
+  micro           96.6 ±0.4         94.7 ±0.5         95.2 ±0.3         85.5 ±0.5        11.1
+  base2           98.2 ±0.1         92.0 ±0.6         95.1 ±0.2         80.0 ±2.9        18.1
+  large           98.2 ±0.1         91.5 ±1.5         95.0 ±0.2         80.1 ±1.9        18.2
+
+------------------------------------------------------------------------------
+READING IT
+
+  micro loses 11.1 F1 points across the curve;
+  large loses 18.2.  Difference: +7.0 points.
+
+  The larger arm falls FURTHER. That is the overfitting signature:
+  it holds up on training phrasings and gives more of it back on
+  unseen ones. Hypothesis (b) is supported.
+
+  Note: this tests transfer across CARRIER PHRASING. It does not test
+  hypothesis (a) -- whether 15,000 examples underdetermine 434M
+  parameters -- which needs a training-set-size sweep, not an eval.

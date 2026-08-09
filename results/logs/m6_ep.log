@@ -1,0 +1,39 @@
+device: cuda
+headline set: 2,492 narratives, 10,543 spans
+
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 2783.28it/s]
+  micro   1 epoch(s)  f1  83.8%  recall  77.1%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 5568.57it/s]
+  micro   3 epoch(s)  f1  85.5%  recall  76.4%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 5471.09it/s]
+  base2   1 epoch(s)  f1  82.1%  recall  70.9%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 3349.24it/s]
+  base2   3 epoch(s)  f1  77.4%  recall  64.4%
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 4353.60it/s]
+  large   1 epoch(s)  f1  84.7%  recall  74.0%
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  64%|██████▎   | 249/392 [00:00<00:00, 2487.54it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 2575.18it/s]
+  large   3 epoch(s)  f1  78.0%  recall  65.2%
+
+M6 — one epoch versus three
+======================================================================
+
+F1 % on the M3 headline set (surrogate), seed 20260806, 15k rows.
+Only the epoch count differs. Single seed per cell: this measures
+direction, not the seed variance already in m3_arms.txt.
+
+  arm         1 epoch   3 epochs    delta
+  micro          83.8       85.5     -1.8
+  base2          82.1       77.4     +4.7
+  large          84.7       78.0     +6.7
+
+----------------------------------------------------------------------
+READING IT
+
+  best at 3 epochs: micro (85.5)
+  best at 1 epoch:  large (84.7)
+
+  THE RANKING CHANGES. The M3 headline ordering is a property of
+  the fixed 3-epoch schedule, not of model capacity. Any claim that
+  a smaller model wins must be restated as a claim about this
+  training recipe, and the recipe needs per-arm early stopping
+  before the comparison means anything.

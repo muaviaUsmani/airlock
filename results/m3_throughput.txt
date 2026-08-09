@@ -1,0 +1,13 @@
+M3 — throughput and cost to redact
+========================================================================
+
+hardware: NVIDIA GeForce RTX 3090   |   600 complaints   |   $0.19/hr
+
+Cost, not milliseconds, because the portfolio's question is when a small
+team should run their own model instead of calling a frontier one — and
+that is decided in dollars.
+
+  arm            params      MB   per sec   hrs/300k       $/1k
+  micro      70,694,817     291     192.1       0.43    0.00027
+  base2     183,856,929     744     155.4       0.54    0.00034
+  large     434,045,985    1745      63.2       1.32    0.00084

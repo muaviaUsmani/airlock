@@ -1,0 +1,43 @@
+device: cuda
+headline set: 2,492 narratives, 10,543 spans
+
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 2761.29it/s]
+  micro   n=2000   f1  77.0%  recall  70.6%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 4453.45it/s]
+  micro   n=5000   f1  83.9%  recall  76.7%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 4307.46it/s]
+  micro   n=14995  f1  85.5%  recall  76.4%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 4321.40it/s]
+  base2   n=2000   f1  86.4%  recall  78.2%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 4334.57it/s]
+  base2   n=5000   f1  85.1%  recall  75.5%
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights:  84%|████████▍ | 169/200 [00:00<00:00, 1647.03it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 1768.77it/s]
+  base2   n=14995  f1  77.4%  recall  64.4%
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  84%|████████▍ | 329/392 [00:00<00:00, 3272.68it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 3242.59it/s]
+  large   n=2000   f1  85.4%  recall  75.2%
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  98%|█████████▊| 384/392 [00:00<00:00, 3827.06it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 3849.99it/s]
+  large   n=5000   f1  83.4%  recall  72.3%
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  73%|███████▎  | 288/392 [00:00<00:00, 2875.86it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 2923.82it/s]
+  large   n=14995  f1  78.0%  recall  65.2%
+
+M6 — accuracy against training-set size
+==========================================================================
+
+F1 % on the M3 headline set (surrogate), seed 20260806 throughout.
+One seed per point: this measures the SHAPE of each curve, not the
+seed variance already reported in m3_arms.txt.
+
+  arm          n=2,000     n=5,000    n=14,995  gain 5k->15k
+  micro           77.0        83.9        85.5          1.7
+  base2           86.3        85.1        77.4         -7.7
+  large           85.4        83.4        78.0         -5.4
+
+--------------------------------------------------------------------------
+READING IT
+
+  From 5k to 15k rows: micro gains +1.7 F1, large gains -5.4.
+
+  Both curves have flattened by 15k. The larger arm was NOT
+  starved -- more data of this kind would not close the gap, and
+  the memorisation account in DECISIONS/015 is the explanation,
+  not a data budget artefact.

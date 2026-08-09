@@ -1,0 +1,10 @@
+arm,train_rows,model,recall_pct,precision_pct,f1_pct
+micro,2000,encoder-micro-n2000-s20260806,70.63,84.58,76.97
+micro,5000,encoder-micro-n5000-s20260806,76.71,92.5,83.87
+micro,14995,encoder-micro-s20260806,76.4,97.18,85.55
+base2,2000,encoder-base2-n2000-s20260806,78.21,96.38,86.35
+base2,5000,encoder-base2-n5000-s20260806,75.55,97.38,85.09
+base2,14995,encoder-base2-s20260806,64.38,96.96,77.38
+large,2000,encoder-large-n2000-s20260806,75.16,98.77,85.36
+large,5000,encoder-large-n5000-s20260806,72.26,98.59,83.39
+large,14995,encoder-large-s20260806,65.2,97.06,78.0

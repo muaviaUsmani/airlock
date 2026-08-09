@@ -1,0 +1,13 @@
+M3 branch B — generative training log
+==========================================================
+base model      Qwen/Qwen3-0.6B
+trainable       10,092,544 of 606,142,464 (LoRA r=16)
+device          cuda   dtype torch.bfloat16
+training rows   8
+epochs          1  batch 1 x8 accum
+lr              0.0001   max len 1024
+seed            20260806
+
+epoch 1: mean loss 0.4206  (0.1 min)
+
+total training time  0.1 min

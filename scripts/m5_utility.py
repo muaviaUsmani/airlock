@@ -96,7 +96,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=250)
     ap.add_argument("--methods", default="raw,presidio,airlock,spacy")
-    ap.add_argument("--model-dir", default="models/encoder-base2-s20260806")
+    ap.add_argument("--model-dir", default="models/encoder-base2-s20260806",
+                    help="deprecated; use --airlock-dirs")
+    ap.add_argument("--airlock-dirs",
+                    default="models/encoder-micro-s20260806,models/encoder-base2-s20260806",
+                    help="comma-separated encoder dirs, one airlock condition each")
     args = ap.parse_args()
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
@@ -153,15 +157,66 @@ def main() -> int:
         print("no narratives matched — cannot grade", file=sys.stderr)
         return 1
 
+    # 8.4% of the corpus (11.2% of the graded slice) has no CFPB Sub-product.
+    # str(nan) is the string "nan", which previously did two bad things at once:
+    # it became the answer key for those rows, which no reader can produce, AND
+    # sorted({...}) put "nan" into the option list, so it was offered to the
+    # reader as a valid choice on EVERY row. A row with no answer key is not a
+    # question the reader got wrong; it is not a question at all, so it is
+    # excluded from that question's denominator rather than scored as a miss.
+    for t in truth:
+        for key, _, _ in QUESTIONS:
+            if pd.isna(t[key]) or normalise(t[key]) in ("", "nan", "none"):
+                t[key] = None
+
+    # Every label that actually appears in the graded slice is offered. The
+    # previous version capped `issue` at sorted(...)[:12] -- the first twelve
+    # ALPHABETICALLY out of 27 present -- so only 32.6% of the true answers were
+    # even reachable, and the two most common ones were missing because they
+    # start with "P" and "O". That capped the question at 32.6% before the
+    # reader saw a word of text, and it read as poor comprehension rather than
+    # as a broken option list. There is no cap now: a longer list makes the
+    # question harder, which is fine, but an unreachable answer makes it wrong.
     options = {
-        "sub_product": sorted({str(t["sub_product"]) for t in truth}),
-        "issue": sorted({str(t["issue"]) for t in truth})[:12],
+        "sub_product": sorted({str(t["sub_product"]) for t in truth if t["sub_product"]}),
+        "issue": sorted({str(t["issue"]) for t in truth if t["issue"]}),
         "relief": ["yes", "no"],
     }
     # "Closed with non-monetary relief" CONTAINS "monetary", so a substring test
     # labels non-monetary relief as monetary. Match the exact CFPB category.
     for t in truth:
-        t["relief"] = "yes" if normalise(t["relief"]) == "closed with monetary relief" else "no"
+        if t["relief"] is not None:
+            t["relief"] = "yes" if normalise(t["relief"]) == "closed with monetary relief" else "no"
+
+    # Majority-class baseline: what a reader scores by ignoring the text entirely
+    # and always naming the most common label. A question whose accuracy sits
+    # below its baseline is measuring the base rate, not the narrative, and that
+    # is worth seeing next to the number rather than discovering later.
+    baseline, gradable = {}, {}
+    for key, _, _ in QUESTIONS:
+        vals = [normalise(t[key]) for t in truth if t[key] is not None]
+        gradable[key] = len(vals)
+        baseline[key] = Counter(vals).most_common(1)[0][1] / len(vals) if vals else 0.0
+    # Invariant: a correct answer must always be available to the reader. This
+    # is checked rather than assumed, because both ways it has been violated in
+    # this script produced a plausible low score instead of an error -- once via
+    # a "nan" answer key, once via an alphabetically truncated option list.
+    print("  gradable rows / majority baseline per question:", flush=True)
+    unreachable = False
+    for key, _, _ in QUESTIONS:
+        opts = {normalise(o) for o in options[key]}
+        vals = [t[key] for t in truth if t[key] is not None]
+        miss = sum(1 for v in vals if normalise(v) not in opts)
+        note = f"{len(options[key])} options"
+        if miss:
+            unreachable = True
+            note = (f"UNREACHABLE {miss}/{len(vals)} true answers missing from options "
+                    f"-> question capped at {100*(len(vals)-miss)/len(vals):.1f}%")
+        print(f"    {key:<12} {gradable[key]:>4} rows   baseline {100*baseline[key]:5.1f}%   {note}",
+              flush=True)
+    if unreachable:
+        print("  !! at least one question cannot be answered correctly for some rows;\n"
+              "     the scores below understate every method equally.", file=sys.stderr)
 
     # --- build each redaction condition -----------------------------------
     variants = {"raw": texts}
@@ -177,11 +232,27 @@ def main() -> int:
         elif m == "airlock":
             import torch
             from transformers import AutoModelForTokenClassification, AutoTokenizer
-            dev = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-            d = ROOT / args.model_dir
-            tok = AutoTokenizer.from_pretrained(d)
-            mod = AutoModelForTokenClassification.from_pretrained(d, dtype=torch.float32).to(dev).eval()
-            preds = M3.predict_encoder(texts, mod, tok, dev)
+            # cuda first: a previous eval script checked only mps and silently
+            # ran on CPU with the GPU at 0% utilisation.
+            dev = torch.device("cuda" if torch.cuda.is_available()
+                               else "mps" if torch.backends.mps.is_available() else "cpu")
+            # One condition per arm. Which encoder supplies the airlock condition
+            # changes the published utility number, so both are run and compared
+            # rather than one being picked.
+            for d_rel in [x for x in args.airlock_dirs.split(",") if x]:
+                d = ROOT / d_rel
+                if not (d / "model.safetensors").exists():
+                    print(f"  SKIP airlock arm {d_rel}: no weights at {d}", file=sys.stderr)
+                    continue
+                tok = AutoTokenizer.from_pretrained(d)
+                mod = AutoModelForTokenClassification.from_pretrained(
+                    d, dtype=torch.float32).to(dev).eval()
+                p = M3.predict_encoder(texts, mod, tok, dev)
+                arm = d.name.replace("encoder-", "").split("-s")[0]
+                variants[f"airlock:{arm}"] = [M4.redact(t, x) for t, x in zip(texts, p)]
+                print(f"  built airlock:{arm} condition from {d_rel}", flush=True)
+                del mod
+            continue
         else:
             continue
         variants[m] = [M4.redact(t, p) for t, p in zip(texts, preds)]
@@ -193,6 +264,7 @@ def main() -> int:
     for name, variant in variants.items():
         correct = Counter()
         unknown = Counter()
+        graded = Counter()
         asked = 0
         t0 = time.time()
         for i, text in enumerate(variant):
@@ -206,6 +278,10 @@ def main() -> int:
                 continue
             asked += 1
             for key, _, _ in QUESTIONS:
+                # No answer key for this row and question -> not a question.
+                if truth[i][key] is None:
+                    continue
+                graded[key] += 1
                 got = normalise(j.get(key, ""))
                 want = normalise(truth[i][key])
                 if got == "unknown":
@@ -215,14 +291,18 @@ def main() -> int:
             if (i + 1) % 50 == 0:
                 print(f"    {name}: {i+1}/{len(variant)}", flush=True)
         per_method[name] = {"asked": asked, "correct": correct, "unknown": unknown,
-                            "seconds": time.time() - t0}
-        overall = sum(correct.values()) / max(asked * len(QUESTIONS), 1)
+                            "graded": graded, "seconds": time.time() - t0}
+        overall = sum(correct.values()) / max(sum(graded.values()), 1)
         print(f"  {name:<10} {100*overall:5.1f}% correct over {asked} narratives "
               f"({time.time()-t0:.0f}s)", flush=True)
         for key, _, _ in QUESTIONS:
+            acc = 100 * correct[key] / max(graded[key], 1)
             rows.append({"method": name, "question": key, "asked": asked,
-                         "correct": correct[key], "unknown": unknown[key],
-                         "accuracy_pct": round(100 * correct[key] / max(asked, 1), 2)})
+                         "graded": graded[key], "correct": correct[key],
+                         "unknown": unknown[key],
+                         "accuracy_pct": round(acc, 2),
+                         "baseline_pct": round(100 * baseline[key], 2),
+                         "over_baseline_pct": round(acc - 100 * baseline[key], 2)})
 
     RESULTS.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows).to_csv(RESULTS / "m5_utility.csv", index=False)
@@ -235,21 +315,41 @@ def main() -> int:
          "The cheap reader is deliberate: this measures what the REDACTION costs,",
          "not how clever the reader is. A stronger model would infer around the",
          "gaps and flatter the redactor.", "",
-         f"  {'method':<10} {'overall':>9}" + "".join(f"{k:>16}" for k, _, _ in QUESTIONS)]
+         f"  {'method':<16} {'overall':>9}" + "".join(f"{k:>16}" for k, _, _ in QUESTIONS)]
     base = None
     for name, r in per_method.items():
-        overall = 100 * sum(r["correct"].values()) / max(r["asked"] * len(QUESTIONS), 1)
+        overall = 100 * sum(r["correct"].values()) / max(sum(r["graded"].values()), 1)
         if name == "raw":
             base = overall
-        cells = "".join(f"{100*r['correct'][k]/max(r['asked'],1):>15.1f}%" for k, _, _ in QUESTIONS)
-        L.append(f"  {name:<10} {overall:>8.1f}%{cells}")
+        cells = "".join(f"{100*r['correct'][k]/max(r['graded'][k],1):>15.1f}%"
+                        for k, _, _ in QUESTIONS)
+        L.append(f"  {name:<16} {overall:>8.1f}%{cells}")
+
+    # The baseline row is the point of the table: a question sitting below it is
+    # reporting the base rate rather than anything the reader read.
+    L += ["  " + "-" * 74,
+          f"  {'majority baseline':<16} {'':>9}"
+          + "".join(f"{100*baseline[k]:>15.1f}%" for k, _, _ in QUESTIONS),
+          f"  {'gradable rows':<16} {'':>9}"
+          + "".join(f"{gradable[k]:>16}" for k, _, _ in QUESTIONS),
+          "",
+          f"  Only `issue` ({len(options['issue'])} labels here) has enough spread for",
+          "  accuracy to mean much; sub_product and relief are both 2-way, so their",
+          "  baselines sit near 90% and neither reader beats one. Rows where the CFPB",
+          "  left the field empty are excluded from that question's denominator rather",
+          "  than scored as misses, and every label present is offered as an option --",
+          "  an earlier version capped the list alphabetically and made two thirds of",
+          "  the correct answers unreachable."]
     if base is not None:
         L += ["", "-" * 72, "THE TRADE — leakage against usefulness", "",
-              f"  {'method':<10} {'re-ident U':>11} {'utility':>9} {'utility lost':>14}"]
+              f"  {'method':<16} {'re-ident U':>11} {'utility':>9} {'utility lost':>14}"]
         leak = {"raw": 36.9, "presidio": 1.2, "airlock": 0.2, "spacy": 0.0}
         for name, r in per_method.items():
-            overall = 100 * sum(r["correct"].values()) / max(r["asked"] * len(QUESTIONS), 1)
-            L.append(f"  {name:<10} {leak.get(name, float('nan')):>10.1f}% {overall:>8.1f}% "
+            overall = 100 * sum(r["correct"].values()) / max(sum(r["graded"].values()), 1)
+            # "airlock:micro" and "airlock:base2" share M4's airlock leakage
+            # figure, which was measured for the arm named in M4, not per-arm.
+            u = leak.get(name.split(":")[0], float("nan"))
+            L.append(f"  {name:<16} {u:>10.1f}% {overall:>8.1f}% "
                      f"{base-overall:>13.1f}")
         L += ["", "  Re-identification from M4 (natural_v2, 10,000-customer database).",
               "  A redactor is only good if it moves DOWN the first column without",

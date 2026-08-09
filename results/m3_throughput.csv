@@ -1,0 +1,4 @@
+arm,hardware,params,size_mb_fp32,ms_per_complaint,complaints_per_sec,hours_per_300k,usd_per_1k_complaints
+micro,NVIDIA GeForce RTX 3090,70694817,291,5.2,192.1,0.43,0.00027
+base2,NVIDIA GeForce RTX 3090,183856929,744,6.4,155.4,0.54,0.00034
+large,NVIDIA GeForce RTX 3090,434045985,1745,15.8,63.2,1.32,0.00084

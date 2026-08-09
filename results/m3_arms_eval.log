@@ -1,0 +1,110 @@
+building surrogate transfer set...
+  2,492 real narratives, 10,543 scored spans
+
+
+running on cuda
+
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 2601.21it/s]
+  micro     seed 20260806  recall  76.4%  precision  97.2%  f1  85.5%  cat  97.6%  5ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights:  80%|████████  | 160/200 [00:00<00:00, 1564.07it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 1530.77it/s]
+  micro     seed 20260807  recall  76.4%  precision  97.9%  f1  85.9%  cat  97.9%  4ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights:  79%|███████▉  | 158/200 [00:00<00:00, 1560.35it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 1570.52it/s]
+  micro     seed 20260808  recall  75.1%  precision  97.8%  f1  85.0%  cat  98.2%  4ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 3545.33it/s]
+  base2     seed 20260806  recall  64.4%  precision  97.0%  f1  77.4%  cat  99.4%  7ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 3562.04it/s]
+  base2     seed 20260807  recall  71.6%  precision  99.1%  f1  83.1%  cat  99.4%  7ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 3351.96it/s]
+  base2     seed 20260808  recall  68.0%  precision  95.7%  f1  79.5%  cat  99.0%  7ms/narr
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  61%|██████    | 238/392 [00:00<00:00, 2374.51it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 2013.37it/s]
+  large     seed 20260806  recall  65.2%  precision  97.1%  f1  78.0%  cat  99.3%  18ms/narr
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 4537.96it/s]
+  large     seed 20260807  recall  69.6%  precision  95.8%  f1  80.6%  cat  99.3%  18ms/narr
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 4431.11it/s]
+  large     seed 20260808  recall  69.9%  precision  98.0%  f1  81.6%  cat  99.5%  18ms/narr
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  11%|█         | 34/311 [00:00<00:00, 334.27it/s]Loading weights:  22%|██▏       | 68/311 [00:00<00:01, 234.60it/s]Loading weights:  30%|███       | 94/311 [00:00<00:00, 242.63it/s]Loading weights:  40%|████      | 125/311 [00:00<00:00, 264.36it/s]Loading weights:  49%|████▉     | 153/311 [00:00<00:00, 269.09it/s]Loading weights:  58%|█████▊    | 181/311 [00:00<00:00, 272.32it/s]Loading weights:  68%|██████▊   | 212/311 [00:00<00:00, 283.04it/s]Loading weights:  77%|███████▋  | 241/311 [00:00<00:00, 279.98it/s]Loading weights:  87%|████████▋ | 270/311 [00:00<00:00, 282.07it/s]Loading weights:  96%|█████████▌| 299/311 [00:01<00:00, 281.06it/s]Loading weights: 100%|██████████| 311/311 [00:01<00:00, 281.89it/s]
+    writer 108/2492
+    writer 204/2492
+    writer 300/2492
+    writer 408/2492
+    writer 504/2492
+    writer 600/2492
+    writer 708/2492
+    writer 804/2492
+    writer 900/2492
+    writer 1008/2492
+    writer 1104/2492
+    writer 1200/2492
+    writer 1308/2492
+    writer 1404/2492
+    writer 1500/2492
+    writer 1608/2492
+    writer 1704/2492
+    writer 1800/2492
+    writer 1908/2492
+    writer 2004/2492
+    writer 2100/2492
+    writer 2208/2492
+    writer 2304/2492
+    writer 2400/2492
+  writer    recall  50.9%  precision  99.5%  f1  67.4%  | drift 4.5%  unparseable 26.3%
+
+M3 — authored carriers vs hardened injector, on real prose
+============================================================================
+
+2,492 real CFPB narratives, 10,543 scored spans.
+Surrogate-filled (decision 008): real text, real redaction sites, values
+we chose. Contains NO carrier templates from either injector, so it is
+neutral ground for both arms.
+
+Three seeds per arm. Identical architecture and hyper-parameters — the
+ONLY difference is the training data (decision 010).
+
+----------------------------------------------------------------------------
+HEADLINE
+
+  method                       recall      precision             f1   cat acc
+  encoder micro 22M       76.0% ± 0.8    97.6% ± 0.4    85.5% ± 0.5     97.9%
+  encoder base 184M       68.0% ± 3.6    97.3% ± 1.7    80.0% ± 2.9     99.2%
+  encoder large 434M      68.2% ± 2.6    96.9% ± 1.1    80.1% ± 1.9     99.4%
+  writer Qwen3 0.6B      50.9%          99.5%          67.4%            99.6%
+
+----------------------------------------------------------------------------
+WRITER TEXT DRIFT  (decision 006: reported, never repaired)
+
+  narratives where untagged text was altered     4.5%
+  output too mangled to align at all            26.3%
+  share of characters differing from input     30.48%
+
+  A drifted narrative contributes NO spans. In deployment you ship the
+  writer's OUTPUT, so if that text differs from the input it is not a
+  redaction of the input and cannot be credited as one.
+
+
+----------------------------------------------------------------------------
+PER-CATEGORY RECALL  (mean across seeds, ± spread)
+
+  category                n   presidio      spacy        authored        HARDENED     delta
+  ACCOUNT_ID            714       0.0%       0.0%               -               -        -
+  CASE_REF              176       0.0%       0.0%               -               -        -
+  CONTACT               122       0.0%       0.0%               -               -        -
+  GOV_ID                  2       0.0%       0.0%               -               -        -
+  PERSON                425       0.0%       0.0%               -               -        -
+  EMPLOYER                9       0.0%       0.0%               -               -        -
+  HEALTH                  3       0.0%       0.0%               -               -        -
+  LIFE_EVENT              9       0.0%       0.0%               -               -        -
+  LOCATION_FINE          87       0.0%       0.0%               -               -        -
+  ORG_THIRD_PARTY       647       0.0%       0.0%               -               -        -
+  PROTECTED_ATTR         56       0.0%       0.0%               -               -        -
+  RELATIONSHIP           16       0.0%       0.0%               -               -        -
+  AMOUNT                246       0.0%       0.0%               -               -        -
+  DATE                7,607       0.0%       0.0%               -               -        -
+  MERCHANT               44       0.0%       0.0%               -               -        -
+  TEMPORAL              380       0.0%       0.0%               -               -        -
+
+----------------------------------------------------------------------------
+INFERENCE COST ON THE M1  (this is the claim, decision 011)
+
+  model on disk            0 MB  (fp32; fp16 export would be ~0 MB)
+  peak process memory      7 MB

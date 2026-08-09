@@ -1,0 +1,24 @@
+M3 — the writer's inference cost under equal effort
+============================================================================
+
+300 narratives from the M3 headline set, same text for every row.
+F1 and unparseable rate are reported alongside speed so a configuration
+that bought time with accuracy cannot pass as a free win.
+
+  configuration                      ms/narr      f1  unparse   VRAM  vs baseline
+  fp32 b12 bucketed (published)         3176    74.5    25.7%   9.6G  (baseline)
+  bf16 b12 bucketed                     3898    74.0    26.7%   4.8G  97.7% identical
+  bf16 b32 bucketed                     1884    74.0    26.7%   7.8G  98.0% identical
+  bf16 b64 bucketed                     1200    73.8    27.0%  14.4G  97.3% identical
+
+----------------------------------------------------------------------------
+
+  best configuration is 2.6x faster than the published one,
+  at 1200 ms/narrative against micro's 4.5 ms
+  -- a gap of 267x, not the 690x the
+  published row implies.
+
+  NOT measured here: a serving runtime (vLLM/TensorRT-LLM), which the
+  literature puts at a further 5-10x, and the span-emitting formulation
+  in DECISIONS/016, which would cut decode tokens ~13x. Both are
+  predictions and neither belongs in a published number until run.

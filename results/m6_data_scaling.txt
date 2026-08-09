@@ -1,0 +1,21 @@
+M6 — accuracy against training-set size
+==========================================================================
+
+F1 % on the M3 headline set (surrogate), seed 20260806 throughout.
+One seed per point: this measures the SHAPE of each curve, not the
+seed variance already reported in m3_arms.txt.
+
+  arm          n=2,000     n=5,000    n=14,995  gain 5k->15k
+  micro           77.0        83.9        85.5          1.7
+  base2           86.3        85.1        77.4         -7.7
+  large           85.4        83.4        78.0         -5.4
+
+--------------------------------------------------------------------------
+READING IT
+
+  From 5k to 15k rows: micro gains +1.7 F1, large gains -5.4.
+
+  Both curves have flattened by 15k. The larger arm was NOT
+  starved -- more data of this kind would not close the gap, and
+  the memorisation account in DECISIONS/015 is the explanation,
+  not a data budget artefact.

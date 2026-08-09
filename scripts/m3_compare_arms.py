@@ -72,6 +72,10 @@ def main() -> int:
     ap.add_argument("--no-baselines", dest="baselines", action="store_false")
     ap.add_argument("--arms", default="micro,base2,large")
     ap.add_argument("--writer", default="", help="path to a generative model to include")
+    ap.add_argument("--writer-batch", type=int, default=8,
+                    help="generation batch size; safe to raise once length-bucketed")
+    ap.add_argument("--no-bucket", action="store_true",
+                    help="disable length-bucketing (for diffing against the old path)")
     args = ap.parse_args()
 
     from transformers import AutoModelForTokenClassification, AutoTokenizer
@@ -169,7 +173,10 @@ def main() -> int:
         base = AutoModelForCausalLM.from_pretrained(cfg["base_model"], dtype=torch.float32).to(dev)
         wmod = PeftModel.from_pretrained(base, wdir).to(dev).eval()
         t0 = time.time()
-        wpreds, wstats = GEN.predict(texts, wmod, wtok, dev, INSTRUCTION)
+        wpreds, wstats = GEN.predict(texts, wmod, wtok, dev, INSTRUCTION,
+                                     batch=args.writer_batch,
+                                     bucket=not args.no_bucket,
+                                     progress_every=100)
         r = M3.score(truths, clean(wpreds), want_category=True)
         r["seconds"] = time.time() - t0
         r["ms_per_narrative"] = 1000 * r["seconds"] / max(len(texts), 1)

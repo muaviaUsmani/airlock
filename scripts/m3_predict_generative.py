@@ -103,32 +103,63 @@ def recover(original: str, tagged: str, drift_tolerance: float = 0.02):
     return out, drift_chars, True
 
 
-def predict(texts, model, tok, dev, instruction, max_new_tokens=1400, batch=4):
-    """Generate tagged output and recover spans. Also returns drift statistics."""
+def predict(texts, model, tok, dev, instruction, max_new_tokens=1400, batch=4,
+            bucket=True, progress_every=0):
+    """Generate tagged output and recover spans. Also returns drift statistics.
+
+    Batches are formed from narratives of SIMILAR length. `generate` runs a batch
+    until every sequence in it has finished, so a 200-token narrative sharing a
+    batch with a 1,400-token one pays the long one's cost. On the M3 evaluation
+    set the arrival order is effectively random in length, so most batches ran at
+    the longest member's cost: measured 11.4 s/narrative, 7.9 hours for 2,492.
+    Sorting by length first removes that waste without changing any output.
+
+    Ordering is a correctness concern and not only a speed one -- scoring matches
+    spans to texts by index, so the sort is undone before returning. `bucket` is
+    left switchable so the two paths can be diffed against each other.
+    """
     import torch
 
-    preds, drifted, unparseable, drift_total, char_total = [], 0, 0, 0, 0
     model.eval()
-    for i in range(0, len(texts), batch):
-        chunk = texts[i : i + batch]
-        prompts = [instruction + t + "\n\nTagged:\n" for t in chunk]
-        enc = tok(prompts, return_tensors="pt", padding=True,
+    prompts = [instruction + t + "\n\nTagged:\n" for t in texts]
+
+    order = list(range(len(texts)))
+    if bucket:
+        lengths = [len(tok(p, add_special_tokens=False).input_ids) for p in prompts]
+        order.sort(key=lambda i: lengths[i])
+
+    # Indexed by ORIGINAL position, so the sorted traversal cannot leak into the
+    # returned order.
+    recovered: list = [None] * len(texts)
+
+    done = 0
+    for s in range(0, len(order), batch):
+        idx = order[s : s + batch]
+        enc = tok([prompts[i] for i in idx], return_tensors="pt", padding=True,
                   padding_side="left", truncation=True, max_length=1024).to(dev)
         with torch.no_grad():
             gen = model.generate(**enc, max_new_tokens=max_new_tokens,
                                  do_sample=False, temperature=None, top_p=None,
                                  pad_token_id=tok.pad_token_id)
-        for j, t in enumerate(chunk):
+        for j, i in enumerate(idx):
             completion = tok.decode(gen[j][enc["input_ids"].shape[1]:],
                                     skip_special_tokens=True)
-            spans, dc, ok = recover(t, completion)
-            preds.append(spans)
-            char_total += len(t)
-            drift_total += dc
-            if not ok:
-                unparseable += 1
-            elif dc > 0:
-                drifted += 1
+            recovered[i] = recover(texts[i], completion)
+        done += len(idx)
+        # A run this long with no output at all is how the previous attempt
+        # became impossible to tell apart from a hang.
+        if progress_every and (done % progress_every < batch):
+            print(f"    writer {done}/{len(texts)}", flush=True)
+
+    preds, drifted, unparseable, drift_total, char_total = [], 0, 0, 0, 0
+    for t, (spans, dc, ok) in zip(texts, recovered):
+        preds.append(spans)
+        char_total += len(t)
+        drift_total += dc
+        if not ok:
+            unparseable += 1
+        elif dc > 0:
+            drifted += 1
     n = max(len(texts), 1)
     stats = {
         "drift_rate": drifted / n,

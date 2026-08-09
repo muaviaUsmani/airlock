@@ -1,0 +1,5 @@
+config,dtype,batch,ms_per_narrative,f1_pct,recall_pct,precision_pct,unparseable_pct,peak_vram_gb,vs_baseline
+fp32 b12 bucketed (published),float32,12,3175.5,74.49,59.74,98.92,25.67,9.59,(baseline)
+bf16 b12 bucketed,bfloat16,12,3898.2,74.04,59.28,98.61,26.67,4.82,97.7% identical
+bf16 b32 bucketed,bfloat16,32,1884.3,74.01,59.18,98.76,26.67,7.82,98.0% identical
+bf16 b64 bucketed,bfloat16,64,1200.2,73.81,58.81,99.06,27.0,14.37,97.3% identical

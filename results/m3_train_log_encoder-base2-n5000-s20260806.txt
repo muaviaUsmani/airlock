@@ -1,0 +1,18 @@
+M3 branch A — encoder training log
+==========================================================
+base model      microsoft/deberta-v3-base
+parameters      183,856,929
+device          cuda
+training rows   5,000
+epochs          3   batch 8 x2 accum
+lr              3e-05   warmup 0.06
+max seq length  384
+seed            20260806
+
+epoch 1: mean loss 0.2364  (1.3 min)
+epoch 2: mean loss 0.0033  (1.4 min)
+epoch 3: mean loss 0.0018  (1.4 min)
+
+total training time  4.1 min
+model on disk        744 MB
+saved to             models/encoder-base2-n5000-s20260806

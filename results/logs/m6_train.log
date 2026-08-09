@@ -1,0 +1,284 @@
+gpu: NVIDIA GeForce RTX 3090
+=== micro  n=2000  seed 20260806
+device: cuda  |  model: microsoft/deberta-v3-xsmall
+training rows: 2,000  |  labels: 33
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/198 [00:00<?, ?it/s]Loading weights:   2%|▏         | 3/198 [00:00<00:11, 16.99it/s]Loading weights:  97%|█████████▋| 193/198 [00:00<00:00, 853.55it/s]Loading weights: 100%|██████████| 198/198 [00:00<00:00, 699.61it/s]
+[transformers] [1mDebertaV2ForTokenClassification LOAD REPORT[0m from: microsoft/deberta-v3-xsmall
+Key                                        | Status     | 
+-------------------------------------------+------------+-
+mask_predictions.LayerNorm.bias            | UNEXPECTED | 
+mask_predictions.dense.weight              | UNEXPECTED | 
+deberta.embeddings.word_embeddings._weight | UNEXPECTED | 
+mask_predictions.classifier.bias           | UNEXPECTED | 
+lm_predictions.lm_head.bias                | UNEXPECTED | 
+mask_predictions.LayerNorm.weight          | UNEXPECTED | 
+lm_predictions.lm_head.dense.weight        | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.weight    | UNEXPECTED | 
+mask_predictions.dense.bias                | UNEXPECTED | 
+lm_predictions.lm_head.dense.bias          | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.bias      | UNEXPECTED | 
+mask_predictions.classifier.weight         | UNEXPECTED | 
+classifier.weight                          | MISSING    | 
+classifier.bias                            | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  epoch 1: mean loss 1.1776  (0.3 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.32it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.32it/s]
+    checkpoint saved after epoch 1
+  epoch 2: mean loss 0.2283  (0.3 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.37it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.37it/s]
+    checkpoint saved after epoch 2
+  epoch 3: mean loss 0.1694  (0.3 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.41it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.41it/s]
+    checkpoint saved after epoch 3
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.40it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.40it/s]
+
+total training time  0.9 min
+model on disk        291 MB
+saved to             models/encoder-micro-n2000-s20260806
+=== micro  n=5000  seed 20260806
+device: cuda  |  model: microsoft/deberta-v3-xsmall
+training rows: 5,000  |  labels: 33
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/198 [00:00<?, ?it/s]Loading weights: 100%|██████████| 198/198 [00:00<00:00, 3004.08it/s]
+[transformers] [1mDebertaV2ForTokenClassification LOAD REPORT[0m from: microsoft/deberta-v3-xsmall
+Key                                        | Status     | 
+-------------------------------------------+------------+-
+lm_predictions.lm_head.LayerNorm.bias      | UNEXPECTED | 
+mask_predictions.LayerNorm.weight          | UNEXPECTED | 
+lm_predictions.lm_head.bias                | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.weight    | UNEXPECTED | 
+mask_predictions.LayerNorm.bias            | UNEXPECTED | 
+deberta.embeddings.word_embeddings._weight | UNEXPECTED | 
+mask_predictions.classifier.weight         | UNEXPECTED | 
+mask_predictions.dense.bias                | UNEXPECTED | 
+mask_predictions.dense.weight              | UNEXPECTED | 
+lm_predictions.lm_head.dense.weight        | UNEXPECTED | 
+lm_predictions.lm_head.dense.bias          | UNEXPECTED | 
+mask_predictions.classifier.bias           | UNEXPECTED | 
+classifier.bias                            | MISSING    | 
+classifier.weight                          | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  epoch 1  63.9%  loss 1.0208  119.2 ex/s  eta   0.3m
+  epoch 1: mean loss 0.7090  (0.7 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.60it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.60it/s]
+    checkpoint saved after epoch 1
+  epoch 2  63.9%  loss 0.0956  121.8 ex/s  eta   0.2m
+  epoch 2: mean loss 0.0834  (0.7 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.60it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.60it/s]
+    checkpoint saved after epoch 2
+  epoch 3  63.9%  loss 0.0485  128.9 ex/s  eta   0.2m
+  epoch 3: mean loss 0.0459  (0.6 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.53it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.52it/s]
+    checkpoint saved after epoch 3
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.51it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  2.51it/s]
+
+total training time  2.0 min
+model on disk        291 MB
+saved to             models/encoder-micro-n5000-s20260806
+=== base2  n=2000  seed 20260806
+device: cuda  |  model: microsoft/deberta-v3-base
+training rows: 2,000  |  labels: 33
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/198 [00:00<?, ?it/s]Loading weights:   2%|▏         | 3/198 [00:00<00:34,  5.68it/s]Loading weights:  54%|█████▍    | 107/198 [00:00<00:00, 225.33it/s]Loading weights:  85%|████████▍ | 168/198 [00:00<00:00, 266.11it/s]Loading weights: 100%|██████████| 198/198 [00:00<00:00, 223.22it/s]
+[transformers] [1mDebertaV2ForTokenClassification LOAD REPORT[0m from: microsoft/deberta-v3-base
+Key                                     | Status     | 
+----------------------------------------+------------+-
+mask_predictions.classifier.bias        | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.bias   | UNEXPECTED | 
+mask_predictions.LayerNorm.bias         | UNEXPECTED | 
+lm_predictions.lm_head.dense.weight     | UNEXPECTED | 
+mask_predictions.LayerNorm.weight       | UNEXPECTED | 
+lm_predictions.lm_head.bias             | UNEXPECTED | 
+mask_predictions.dense.bias             | UNEXPECTED | 
+lm_predictions.lm_head.dense.bias       | UNEXPECTED | 
+mask_predictions.classifier.weight      | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.weight | UNEXPECTED | 
+mask_predictions.dense.weight           | UNEXPECTED | 
+classifier.bias                         | MISSING    | 
+classifier.weight                       | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  epoch 1  80.0%  loss 0.5123   61.2 ex/s  eta   0.1m
+  epoch 1: mean loss 0.4163  (0.5 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.03s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.03s/it]
+    checkpoint saved after epoch 1
+  epoch 2  80.0%  loss 0.0138   61.8 ex/s  eta   0.1m
+  epoch 2: mean loss 0.0128  (0.5 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.03s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.03s/it]
+    checkpoint saved after epoch 2
+  epoch 3  80.0%  loss 0.0064   61.6 ex/s  eta   0.1m
+  epoch 3: mean loss 0.0063  (0.5 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  1.01it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  1.01it/s]
+    checkpoint saved after epoch 3
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.09s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.09s/it]
+
+total training time  1.7 min
+model on disk        744 MB
+saved to             models/encoder-base2-n2000-s20260806
+=== base2  n=5000  seed 20260806
+device: cuda  |  model: microsoft/deberta-v3-base
+training rows: 5,000  |  labels: 33
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/198 [00:00<?, ?it/s]Loading weights:  57%|█████▋    | 113/198 [00:00<00:00, 1115.02it/s]Loading weights: 100%|██████████| 198/198 [00:00<00:00, 1065.47it/s]
+[transformers] [1mDebertaV2ForTokenClassification LOAD REPORT[0m from: microsoft/deberta-v3-base
+Key                                     | Status     | 
+----------------------------------------+------------+-
+lm_predictions.lm_head.dense.bias       | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.weight | UNEXPECTED | 
+mask_predictions.classifier.bias        | UNEXPECTED | 
+mask_predictions.classifier.weight      | UNEXPECTED | 
+mask_predictions.LayerNorm.weight       | UNEXPECTED | 
+mask_predictions.dense.bias             | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.bias   | UNEXPECTED | 
+lm_predictions.lm_head.dense.weight     | UNEXPECTED | 
+mask_predictions.dense.weight           | UNEXPECTED | 
+mask_predictions.LayerNorm.bias         | UNEXPECTED | 
+lm_predictions.lm_head.bias             | UNEXPECTED | 
+classifier.weight                       | MISSING    | 
+classifier.bias                         | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  epoch 1  32.0%  loss 0.7097   59.9 ex/s  eta   0.9m
+  epoch 1  64.0%  loss 0.3651   60.8 ex/s  eta   0.5m
+  epoch 1  96.0%  loss 0.2460   61.7 ex/s  eta   0.1m
+  epoch 1: mean loss 0.2364  (1.3 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  1.09it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  1.09it/s]
+    checkpoint saved after epoch 1
+  epoch 2  32.0%  loss 0.0041   62.7 ex/s  eta   0.9m
+  epoch 2  64.0%  loss 0.0035   61.7 ex/s  eta   0.5m
+  epoch 2  96.0%  loss 0.0033   61.6 ex/s  eta   0.1m
+  epoch 2: mean loss 0.0033  (1.4 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.16s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.16s/it]
+    checkpoint saved after epoch 2
+  epoch 3  32.0%  loss 0.0020   60.5 ex/s  eta   0.9m
+  epoch 3  64.0%  loss 0.0020   59.7 ex/s  eta   0.5m
+  epoch 3  96.0%  loss 0.0018   60.5 ex/s  eta   0.1m
+  epoch 3: mean loss 0.0018  (1.4 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.14s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.14s/it]
+    checkpoint saved after epoch 3
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.17s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.17s/it]
+
+total training time  4.1 min
+model on disk        744 MB
+saved to             models/encoder-base2-n5000-s20260806
+=== large  n=2000  seed 20260806
+device: cuda  |  model: microsoft/deberta-v3-large
+training rows: 2,000  |  labels: 33
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/390 [00:00<?, ?it/s]Loading weights:   1%|          | 3/390 [00:00<01:22,  4.69it/s]Loading weights:  25%|██▍       | 97/390 [00:00<00:01, 162.55it/s]Loading weights:  35%|███▍      | 136/390 [00:00<00:01, 189.17it/s]Loading weights:  44%|████▎     | 170/390 [00:01<00:01, 202.39it/s]Loading weights:  51%|█████▏    | 200/390 [00:01<00:00, 205.52it/s]Loading weights:  58%|█████▊    | 227/390 [00:01<00:00, 201.24it/s]Loading weights:  66%|██████▌   | 257/390 [00:01<00:00, 206.07it/s]Loading weights:  74%|███████▍  | 289/390 [00:01<00:00, 207.04it/s]Loading weights:  82%|████████▏ | 319/390 [00:01<00:00, 220.57it/s]Loading weights:  88%|████████▊ | 343/390 [00:01<00:00, 224.46it/s]Loading weights:  95%|█████████▍| 369/390 [00:01<00:00, 217.64it/s]Loading weights: 100%|██████████| 390/390 [00:02<00:00, 190.77it/s]
+[transformers] [1mDebertaV2ForTokenClassification LOAD REPORT[0m from: microsoft/deberta-v3-large
+Key                                     | Status     | 
+----------------------------------------+------------+-
+lm_predictions.lm_head.LayerNorm.weight | UNEXPECTED | 
+lm_predictions.lm_head.bias             | UNEXPECTED | 
+mask_predictions.dense.bias             | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.bias   | UNEXPECTED | 
+mask_predictions.classifier.weight      | UNEXPECTED | 
+mask_predictions.LayerNorm.bias         | UNEXPECTED | 
+mask_predictions.LayerNorm.weight       | UNEXPECTED | 
+lm_predictions.lm_head.dense.weight     | UNEXPECTED | 
+mask_predictions.classifier.bias        | UNEXPECTED | 
+mask_predictions.dense.weight           | UNEXPECTED | 
+lm_predictions.lm_head.dense.bias       | UNEXPECTED | 
+classifier.bias                         | MISSING    | 
+classifier.weight                       | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  epoch 1  40.0%  loss 0.5478   16.3 ex/s  eta   1.2m
+  epoch 1  80.0%  loss 0.2785   16.7 ex/s  eta   0.4m
+  epoch 1: mean loss 0.2237  (2.0 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.25s/it]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.25s/it]
+    checkpoint saved after epoch 1
+  epoch 2  40.0%  loss 0.0020   17.2 ex/s  eta   1.2m
+  epoch 2  80.0%  loss 0.0022   17.2 ex/s  eta   0.4m
+  epoch 2: mean loss 0.0021  (1.9 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.61s/it]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.61s/it]
+    checkpoint saved after epoch 2
+  epoch 3  40.0%  loss 0.0010   16.1 ex/s  eta   1.2m
+  epoch 3  80.0%  loss 0.0011   16.1 ex/s  eta   0.4m
+  epoch 3: mean loss 0.0010  (2.0 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.40s/it]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.40s/it]
+    checkpoint saved after epoch 3
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.63s/it]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.63s/it]
+
+total training time  6.1 min
+model on disk        1745 MB
+saved to             models/encoder-large-n2000-s20260806
+=== large  n=5000  seed 20260806
+device: cuda  |  model: microsoft/deberta-v3-large
+training rows: 5,000  |  labels: 33
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/390 [00:00<?, ?it/s]Loading weights:  21%|██        | 81/390 [00:00<00:00, 488.37it/s]Loading weights:  33%|███▎      | 130/390 [00:00<00:00, 476.33it/s]Loading weights:  46%|████▌     | 178/390 [00:00<00:00, 458.57it/s]Loading weights:  57%|█████▋    | 224/390 [00:00<00:00, 455.61it/s]Loading weights:  69%|██████▉   | 270/390 [00:00<00:00, 450.64it/s]Loading weights:  82%|████████▏ | 321/390 [00:00<00:00, 379.05it/s]Loading weights:  95%|█████████▍| 369/390 [00:00<00:00, 404.94it/s]Loading weights: 100%|██████████| 390/390 [00:00<00:00, 443.63it/s]
+[transformers] [1mDebertaV2ForTokenClassification LOAD REPORT[0m from: microsoft/deberta-v3-large
+Key                                     | Status     | 
+----------------------------------------+------------+-
+mask_predictions.classifier.bias        | UNEXPECTED | 
+mask_predictions.dense.bias             | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.weight | UNEXPECTED | 
+mask_predictions.classifier.weight      | UNEXPECTED | 
+lm_predictions.lm_head.dense.weight     | UNEXPECTED | 
+lm_predictions.lm_head.LayerNorm.bias   | UNEXPECTED | 
+mask_predictions.LayerNorm.bias         | UNEXPECTED | 
+lm_predictions.lm_head.bias             | UNEXPECTED | 
+mask_predictions.dense.weight           | UNEXPECTED | 
+lm_predictions.lm_head.dense.bias       | UNEXPECTED | 
+mask_predictions.LayerNorm.weight       | UNEXPECTED | 
+classifier.bias                         | MISSING    | 
+classifier.weight                       | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  epoch 1  16.0%  loss 0.7838   16.1 ex/s  eta   4.3m
+  epoch 1  32.0%  loss 0.3981   16.5 ex/s  eta   3.4m
+  epoch 1  48.0%  loss 0.2676   16.5 ex/s  eta   2.6m
+  epoch 1  64.0%  loss 0.2014   16.7 ex/s  eta   1.8m
+  epoch 1  80.0%  loss 0.1617   16.7 ex/s  eta   1.0m
+  epoch 1  96.0%  loss 0.1352   16.8 ex/s  eta   0.2m
+  epoch 1: mean loss 0.1299  (4.9 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.37s/it]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.37s/it]
+    checkpoint saved after epoch 1
+  epoch 2  16.0%  loss 0.0016   17.0 ex/s  eta   4.1m
+  epoch 2  32.0%  loss 0.0017   16.6 ex/s  eta   3.4m
+  epoch 2  48.0%  loss 0.0014   16.6 ex/s  eta   2.6m
+  epoch 2  64.0%  loss 0.0013   16.7 ex/s  eta   1.8m
+  epoch 2  80.0%  loss 0.0011   16.8 ex/s  eta   1.0m
+  epoch 2  96.0%  loss 0.0011   16.5 ex/s  eta   0.2m
+  epoch 2: mean loss 0.0011  (5.0 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.40s/it]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.40s/it]
+    checkpoint saved after epoch 2
+  epoch 3  16.0%  loss 0.0004   16.7 ex/s  eta   4.2m
+  epoch 3  32.0%  loss 0.0003   16.6 ex/s  eta   3.4m
+  epoch 3  48.0%  loss 0.0003   16.6 ex/s  eta   2.6m
+  epoch 3  64.0%  loss 0.0003   16.7 ex/s  eta   1.8m
+  epoch 3  80.0%  loss 0.0003   16.6 ex/s  eta   1.0m
+  epoch 3  96.0%  loss 0.0003   16.6 ex/s  eta   0.2m
+  epoch 3: mean loss 0.0003  (5.0 min)
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.37s/it]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.37s/it]
+    checkpoint saved after epoch 3
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.49s/it]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.49s/it]
+
+total training time  15.1 min
+model on disk        1745 MB
+saved to             models/encoder-large-n5000-s20260806
+
+training done. Evaluate with: scripts/m6_data_scaling.py

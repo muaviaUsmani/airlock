@@ -1,0 +1,26 @@
+building surrogate transfer set...
+  2,492 real narratives, 10,543 scored spans
+
+
+running on cuda
+
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 3952.38it/s]
+  micro     seed 20260806  recall  76.4%  precision  97.2%  f1  85.5%  cat  97.6%  5ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights:  74%|███████▍  | 148/200 [00:00<00:00, 1465.19it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 1417.26it/s]
+  micro     seed 20260807  recall  76.4%  precision  97.9%  f1  85.9%  cat  97.9%  5ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights:  72%|███████▏  | 144/200 [00:00<00:00, 1421.46it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 1449.19it/s]
+  micro     seed 20260808  recall  75.1%  precision  97.8%  f1  85.0%  cat  98.2%  4ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights:  80%|████████  | 161/200 [00:00<00:00, 1596.66it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 1580.93it/s]
+  base2     seed 20260806  recall  64.4%  precision  97.0%  f1  77.4%  cat  99.4%  7ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights:  72%|███████▎  | 145/200 [00:00<00:00, 1415.04it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 1393.26it/s]
+  base2     seed 20260807  recall  71.6%  precision  99.1%  f1  83.1%  cat  99.4%  7ms/narr
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights:  72%|███████▏  | 144/200 [00:00<00:00, 1439.82it/s]Loading weights: 100%|██████████| 200/200 [00:00<00:00, 1429.60it/s]
+  base2     seed 20260808  recall  68.0%  precision  95.7%  f1  79.5%  cat  99.0%  7ms/narr
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  42%|████▏     | 164/392 [00:00<00:00, 1638.31it/s]Loading weights:  84%|████████▎ | 328/392 [00:00<00:00, 904.65it/s] Loading weights: 100%|██████████| 392/392 [00:00<00:00, 952.94it/s]
+  large     seed 20260806  recall  65.2%  precision  97.1%  f1  78.0%  cat  99.3%  18ms/narr
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  33%|███▎      | 130/392 [00:00<00:00, 1271.14it/s]Loading weights:  66%|██████▌   | 258/392 [00:00<00:00, 1022.27it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 1301.07it/s]
+  large     seed 20260807  recall  69.6%  precision  95.8%  f1  80.6%  cat  99.3%  18ms/narr
+Loading weights:   0%|          | 0/392 [00:00<?, ?it/s]Loading weights:  38%|███▊      | 149/392 [00:00<00:00, 1473.14it/s]Loading weights:  76%|███████▌  | 297/392 [00:00<00:00, 1173.50it/s]Loading weights: 100%|██████████| 392/392 [00:00<00:00, 1364.66it/s]
+  large     seed 20260808  recall  69.9%  precision  98.0%  f1  81.6%  cat  99.5%  18ms/narr
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:   0%|          | 1/311 [00:01<06:03,  1.17s/it]Loading weights:  14%|█▍        | 45/311 [00:01<00:05, 48.46it/s]Loading weights:  23%|██▎       | 71/311 [00:01<00:03, 66.39it/s]Loading weights:  29%|██▉       | 91/311 [00:01<00:02, 76.11it/s]Loading weights:  34%|███▍      | 107/311 [00:01<00:02, 86.71it/s]Loading weights:  40%|███▉      | 123/311 [00:01<00:02, 93.65it/s]Loading weights:  44%|████▍     | 137/311 [00:02<00:01, 96.75it/s]Loading weights:  48%|████▊     | 150/311 [00:02<00:01, 102.95it/s]Loading weights:  52%|█████▏    | 163/311 [00:02<00:01, 106.60it/s]Loading weights:  57%|█████▋    | 176/311 [00:02<00:01, 100.41it/s]Loading weights:  62%|██████▏   | 192/311 [00:02<00:01, 107.23it/s]Loading weights:  67%|██████▋   | 207/311 [00:02<00:00, 112.42it/s]Loading weights:  71%|███████   | 220/311 [00:02<00:00, 116.74it/s]Loading weights:  75%|███████▍  | 233/311 [00:02<00:00, 112.15it/s]Loading weights:  79%|███████▉  | 245/311 [00:03<00:00, 113.45it/s]Loading weights:  83%|████████▎ | 257/311 [00:03<00:00, 110.57it/s]Loading weights:  88%|████████▊ | 273/311 [00:03<00:00, 118.14it/s]Loading weights:  92%|█████████▏| 285/311 [00:03<00:00, 116.78it/s]Loading weights:  96%|█████████▌| 299/311 [00:03<00:00, 118.04it/s]Loading weights: 100%|██████████| 311/311 [00:03<00:00, 88.02it/s] 
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.

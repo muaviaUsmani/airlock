@@ -78,6 +78,112 @@ belongs to. That attack is the headline result.
 
 ---
 
+## Mistakes we found in our own method
+
+This section is near the top on purpose. Every item below was caught by attacking our own
+results rather than by anything breaking, and **most of them produced plausible numbers, not
+errors** — which is exactly why they are dangerous and why they are listed before the findings
+they affect.
+
+> **[docs/09-lessons.md](docs/09-lessons.md) is the plain-English version of this**, written for
+> someone who does not want the tables — what went wrong, in ordinary words, and what we would
+> tell someone starting a similar project. This project was a learning exercise; that page is the
+> part that transfers.
+
+### 1. Our training recipe, not model size, explains the headline (confirmed, 2026-08-09)
+
+M3 reports a 70.7M encoder beating a 434M one by ~5 F1, and we nearly published that as a
+finding about model size. **It is a finding about our own recipe.**
+`scripts/m3_train_encoder.py` uses **one learning rate (3e-5) for all three model scales**, a
+**fixed 3 epochs**, and has **no validation split, no early stopping and no best-checkpoint
+selection** — it keeps whatever the last epoch produced. The training losses show the cost:
+
+| arm | epoch 1 | epoch 2 | epoch 3 |
+|---|---:|---:|---:|
+| micro 70.7M | 0.3684 | 0.0095 | **0.0053** |
+| base2 184M | 0.1240 | 0.0012 | **0.0005** |
+| large 434M | 0.0711 | 0.0006 | **0.0003** |
+
+`large` had fitted the training set by epoch 2 and then trained a third epoch anyway, while
+`micro` was the only arm still learning when the schedule ended. **Each arm was therefore scored
+at a different point on its own overfitting curve**, and the more capacity a model has, the
+further past its optimum we stopped.
+
+Retraining all three for **one** epoch, changing nothing else, **inverts the ranking**
+([m6_epoch_ablation](results/m6_epoch_ablation.txt)):
+
+| arm | 1 epoch | 3 epochs | delta |
+|---|---:|---:|---:|
+| micro | 83.8 | **85.5** | −1.8 |
+| base2 | 82.1 | 77.4 | +4.7 |
+| large | **84.7** | 78.0 | +6.7 |
+
+Micro is the only arm that *wants* three epochs. The same cause shows up on a second axis: with
+epochs fixed, more data means more steps means deeper over-training, and both larger arms get
+**worse** from 2k to 15k rows while micro improves
+([m6_data_scaling](results/m6_data_scaling.txt)) — which also disposes of the competing
+"15,000 examples starve a 434M model" hypothesis, since starvation predicts the opposite.
+
+The honest phrasing of the M3 headline is therefore *"under a single training recipe applied
+unchanged across three scales, the larger models overfit and lose"* — a statement about the
+experiment, not about capacity. **One epoch is not the fix either**; it is a second arbitrary
+stopping point. A real size comparison needs a validation split, per-arm early stopping, and a
+learning rate chosen per scale (currently a module constant, not even an argument). See
+[decision 017](DECISIONS/017-the-training-recipe-invalidates-the-size-comparison.md).
+
+### 2. Unmeasured methods printed as hard zeros (found, not yet fixed)
+
+`m3_arms.txt`'s per-category table shows `0.0%` for Presidio and spaCy across all 16 categories.
+They were never run — the eval was invoked with `--no-baselines`. A method that was not measured
+must render as "not run", never as a number a reader can quote.
+
+### 3. "Inference cost on the M1" was measured on a rented GPU (found, not yet fixed)
+
+The same report prints `model on disk 0 MB` and `peak process memory 7 MB` under a heading that
+[decision 011](DECISIONS/011-training-moves-to-rented-gpu.md) requires to be measured on the M1.
+It ran on the GPU box and the size lookup failed. Both numbers are false.
+
+### 4. M5 scored models against answer keys they could not match — three ways
+
+**(a) Blank answers graded as wrong (fixed).** 8.4% of the corpus has no CFPB `Sub-product`.
+`str(nan)` is `"nan"`, so those rows were scored as misses no reader could avoid — **and `"nan"`
+was offered to the grader as a valid multiple-choice option on every row**. Rows with no answer
+key are now excluded from that question's denominator.
+
+**(b) A multiple-choice list missing most of the right answers (fixed).**
+`options["issue"] = sorted({...})[:12]` took the first twelve values **alphabetically** out of 27.
+Only **32.6% of the true answers were among the options offered** — the two most common correct
+answers were excluded because they begin with "P" and "O". That capped the question at 32.6%
+before the reader saw any text; it scored 12.9%. All labels present in the graded slice are now
+offered, and the script asserts the invariant that a correct answer is always reachable, printing
+the achievable ceiling when it is not.
+
+**(c) A question whose answer is never in the text (documented, kept).** "Did the company give
+money back?" is recorded *after* the complaint is filed. The reader correctly answers UNKNOWN and
+is scored wrong.
+
+Every question is now published against its majority-class baseline, which immediately shows that
+two of the three sit *below* the score you get by ignoring the text entirely.
+See [decision 014](DECISIONS/014-m5-answer-key-and-baselines.md).
+
+### 5. The writer arm's cost was inflated ~9× by our own padding waste (fixed)
+
+Generation batched narratives in arrival order, and a batch runs until its *longest* member
+finishes, so short narratives paid for long ones: 11,400 ms/narrative. Sorting by length before
+batching — changing no output — brought it to 1,250 ms. Any "generative costs N× more" claim made
+before that fix was measuring our implementation, not the architecture. HANDOFF §5 had already
+flagged the same disease in the writer's *training* cost; it was present on the inference side too.
+
+### 6. Two claims in our own handoff did not survive checking
+
+The handoff stated that M5's `relief` question "scored 0% even on raw text". The committed smoke
+output records **75.0%** — the highest of the three questions. It also stated the writer's drift
+measurement was "built and unit-tested"; there were **no tests** for it in the repository. There
+are now (`scripts/test_m3_predict_generative.py`). A handoff is the document a later reader
+trusts without re-deriving, which makes an unverified claim in one more costly than usual.
+
+---
+
 ## The claim this project is trying to earn
 
 > On real credit-card complaint narratives, a **372MB** model running on a laptop removes

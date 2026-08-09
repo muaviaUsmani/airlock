@@ -1,0 +1,37 @@
+device: cuda
+300 narratives, 1,078 spans
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:   0%|          | 1/311 [00:01<07:00,  1.36s/it]Loading weights:  18%|█▊        | 57/311 [00:01<00:04, 52.53it/s]Loading weights:  27%|██▋       | 83/311 [00:01<00:03, 66.09it/s]Loading weights:  33%|███▎      | 102/311 [00:01<00:02, 73.79it/s]Loading weights:  38%|███▊      | 118/311 [00:02<00:02, 78.77it/s]Loading weights:  43%|████▎     | 133/311 [00:02<00:01, 89.11it/s]Loading weights:  48%|████▊     | 148/311 [00:02<00:01, 90.23it/s]Loading weights:  53%|█████▎    | 164/311 [00:02<00:01, 100.06it/s]Loading weights:  58%|█████▊    | 181/311 [00:02<00:01, 109.32it/s]Loading weights:  63%|██████▎   | 195/311 [00:02<00:01, 112.87it/s]Loading weights:  67%|██████▋   | 208/311 [00:02<00:00, 114.40it/s]Loading weights:  71%|███████   | 221/311 [00:02<00:00, 110.18it/s]Loading weights:  76%|███████▌  | 236/311 [00:03<00:00, 115.85it/s]Loading weights:  80%|████████  | 249/311 [00:03<00:00, 117.80it/s]Loading weights:  84%|████████▍ | 262/311 [00:03<00:00, 107.78it/s]Loading weights:  89%|████████▉ | 277/311 [00:03<00:00, 114.74it/s]Loading weights:  94%|█████████▎| 291/311 [00:03<00:00, 109.04it/s]Loading weights:  99%|█████████▉| 309/311 [00:03<00:00, 124.72it/s]Loading weights: 100%|██████████| 311/311 [00:03<00:00, 84.93it/s] 
+  fp32 b12 bucketed (published)        3176 ms/narr  f1  74.5%  unparseable  25.7%  vram  9.6GB  (baseline)
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 4407.58it/s]
+  bf16 b12 bucketed                    3898 ms/narr  f1  74.0%  unparseable  26.7%  vram  4.8GB  97.7% identical
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 4216.87it/s]
+  bf16 b32 bucketed                    1884 ms/narr  f1  74.0%  unparseable  26.7%  vram  7.8GB  98.0% identical
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 3925.27it/s]
+  bf16 b64 bucketed                    1200 ms/narr  f1  73.8%  unparseable  27.0%  vram 14.4GB  97.3% identical
+
+M3 — the writer's inference cost under equal effort
+============================================================================
+
+300 narratives from the M3 headline set, same text for every row.
+F1 and unparseable rate are reported alongside speed so a configuration
+that bought time with accuracy cannot pass as a free win.
+
+  configuration                      ms/narr      f1  unparse   VRAM  vs baseline
+  fp32 b12 bucketed (published)         3176    74.5    25.7%   9.6G  (baseline)
+  bf16 b12 bucketed                     3898    74.0    26.7%   4.8G  97.7% identical
+  bf16 b32 bucketed                     1884    74.0    26.7%   7.8G  98.0% identical
+  bf16 b64 bucketed                     1200    73.8    27.0%  14.4G  97.3% identical
+
+----------------------------------------------------------------------------
+
+  best configuration is 2.6x faster than the published one,
+  at 1200 ms/narrative against micro's 4.5 ms
+  -- a gap of 267x, not the 690x the
+  published row implies.
+
+  NOT measured here: a serving runtime (vLLM/TensorRT-LLM), which the
+  literature puts at a further 5-10x, and the span-emitting formulation
+  in DECISIONS/016, which would cut decode tokens ~13x. Both are
+  predictions and neither belongs in a published number until run.
