@@ -1,0 +1,26 @@
+M5 — does the redacted text still answer questions?
+========================================================================
+
+reader: claude-haiku-4-5-20251001 at temperature 0   |   12 complaints
+
+Answers are graded against the CFPB's own structured fields, which the
+CFPB filled in, not us. No human and no model judges anything.
+
+The cheap reader is deliberate: this measures what the REDACTION costs,
+not how clever the reader is. A stronger model would infer around the
+gaps and flatter the redactor.
+
+  method       overall     sub_product           issue          relief
+  raw            55.6%           33.3%           58.3%           75.0%
+  presidio       55.6%           33.3%           58.3%           75.0%
+
+------------------------------------------------------------------------
+THE TRADE — leakage against usefulness
+
+  method      re-ident U   utility   utility lost
+  raw              36.9%     55.6%           0.0
+  presidio          1.2%     55.6%           0.0
+
+  Re-identification from M4 (natural_v2, 10,000-customer database).
+  A redactor is only good if it moves DOWN the first column without
+  moving far down the second.

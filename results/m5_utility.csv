@@ -1,0 +1,7 @@
+method,question,asked,correct,unknown,accuracy_pct
+raw,sub_product,12,4,2,33.33
+raw,issue,12,7,0,58.33
+raw,relief,12,9,1,75.0
+presidio,sub_product,12,4,2,33.33
+presidio,issue,12,7,0,58.33
+presidio,relief,12,9,2,75.0

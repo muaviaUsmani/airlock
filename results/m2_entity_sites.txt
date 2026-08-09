@@ -8,17 +8,18 @@ rarely names a contextual identifier. Real prose, real syntactic
 position, exact label — no category estimation anywhere.
 
   category              train     eval   usable?
-  LOCATION_FINE           387      141       yes
-  ORG_THIRD_PARTY       5,000    2,491       yes
-  PERSON                  474      196       yes
+  LOCATION_FINE           495      195       yes
+  ORG_THIRD_PARTY       5,000    3,178       yes
+  PERSON                  563      233       yes
+  TEMPORAL                828      353       yes
 
 ----------------------------------------------------------------------
 SITES SKIPPED
 
-  not exactly one usable entity             88,538
-  ORG is the complained-about company       12,168
-  ORG is a regulator/bureau/network          1,284
-  degenerate entity                            400
+  no usable entity                          83,155
+  ORG is the complained-about company       13,550
+  ORG is a regulator/bureau/network          1,616
+  degenerate entity                            469
 
 'ORG is the complained-about company' is the guard that matters.
 DEFINITIONS.md says that company is NOT personal information — it is a
@@ -37,8 +38,10 @@ Reported wherever these categories appear.
 SAMPLES
 
   LOCATION_FINE:
-    I understand [[city]] initiated the action, however they are the credit card issuer and I contacted them with 
+    I spent {$1900.00} dollars in [[city]] restaurants which is clearly marked in the " Statement '' section.
   ORG_THIRD_PARTY:
-    I purchased several items and used my [[bank]] Credit card.
+    I have always maintained an impeccable payment record with the company, with all my payments set up on [[bank]
   PERSON:
-    If [[person_full]] ( with whom I 've never done business ) had access to both my cell phone # and my home addr
+    I'm interested in also filing a complaint about [[person_full]] One using off shore call centers to handle cal
+  TEMPORAL:
+    I was told to call back in [[time]] and they could hopefully resolve this situation.

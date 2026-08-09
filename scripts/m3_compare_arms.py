@@ -68,6 +68,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=TS.N)
     ap.add_argument("--baselines", action="store_true", default=True)
+    ap.add_argument("--no-baselines", dest="baselines", action="store_false")
+    ap.add_argument("--arms", default="micro,base2,large")
+    ap.add_argument("--writer", default="", help="path to a generative model to include")
     args = ap.parse_args()
 
     from transformers import AutoModelForTokenClassification, AutoTokenizer
@@ -86,6 +89,7 @@ def main() -> int:
         return [[sp for sp in p if not any(sp[0] < ue and us < sp[1] for us, ue in unf)]
                 for p, unf in zip(preds, unfilled)]
 
+    ARMS = tuple(a for a in args.arms.split(",") if a)
     rows, report = [], {}
 
     # --- baselines, once ---------------------------------------------------
@@ -108,7 +112,7 @@ def main() -> int:
     dev = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"\nencoders on {dev} (this is the hardware the claim is about)\n", flush=True)
 
-    for arm in ("authored", "hard"):
+    for arm in ARMS:
         dirs = sorted(MODELS.glob(f"encoder-{arm}-s*"))
         if not dirs:
             continue
@@ -145,7 +149,32 @@ def main() -> int:
          "-" * 76, "HEADLINE", "",
          f"  {'method':<20} {'recall':>14} {'precision':>14} {'f1':>14} {'cat acc':>9}"]
 
-    for name in ("regex", "spacy", "presidio", "authored", "hard"):
+    # --- the writer, if one was given -------------------------------------
+    if args.writer:
+        import m3_predict_generative as GEN
+        from m3_train_generative import INSTRUCTION
+        from peft import PeftModel
+        from transformers import AutoModelForCausalLM
+        wdir = Path(args.writer)
+        wtok = AutoTokenizer.from_pretrained(wdir)
+        if wtok.pad_token is None:
+            wtok.pad_token = wtok.eos_token
+        cfg = __import__("json").loads((wdir / "checkpoint.json").read_text())
+        base = AutoModelForCausalLM.from_pretrained(cfg["base_model"], dtype=torch.float32).to(dev)
+        wmod = PeftModel.from_pretrained(base, wdir).to(dev).eval()
+        t0 = time.time()
+        wpreds, wstats = GEN.predict(texts, wmod, wtok, dev, INSTRUCTION)
+        r = M3.score(truths, clean(wpreds), want_category=True)
+        r["seconds"] = time.time() - t0
+        r["ms_per_narrative"] = 1000 * r["seconds"] / max(len(texts), 1)
+        r["seed"] = wdir.name.split("-s")[-1]
+        r["drift"] = wstats
+        report["writer"] = [r]
+        print(f"  writer    recall {100*r['recall']:5.1f}%  precision {100*r['precision']:5.1f}%  "
+              f"f1 {100*r['f1']:5.1f}%  | drift {100*wstats['drift_rate']:.1f}%  "
+              f"unparseable {100*wstats['unparseable_rate']:.1f}%", flush=True)
+
+    for name in ("regex", "spacy", "presidio", *ARMS, "writer"):
         if name not in report:
             continue
         runs = report[name]
@@ -153,7 +182,8 @@ def main() -> int:
         pm, ps = agg([x["precision"] for x in runs])
         fm, fs = agg([x["f1"] for x in runs])
         cm, _ = agg([x["cat_acc"] or 0 for x in runs])
-        label = {"authored": "encoder (authored)", "hard": "encoder (HARDENED)"}.get(name, name)
+        label = {"micro": "encoder micro 22M", "base2": "encoder base 184M",
+                 "large": "encoder large 434M", "writer": "writer Qwen3 0.6B"}.get(name, name)
 
         def cell(m, sd):
             return f"{100*m:5.1f}% ±{100*sd:4.1f}" if len(runs) > 1 else f"{100*m:5.1f}%       "
@@ -171,6 +201,16 @@ def main() -> int:
                          "ms_per_narrative": round(x.get("ms_per_narrative", 0), 1)})
 
     # --- the categories the project exists for -----------------------------
+    if "writer" in report and report["writer"][0].get("drift"):
+        d = report["writer"][0]["drift"]
+        L += ["", "-" * 76, "WRITER TEXT DRIFT  (decision 006: reported, never repaired)", "",
+              f"  narratives where untagged text was altered   {100*d['drift_rate']:5.1f}%",
+              f"  output too mangled to align at all           {100*d['unparseable_rate']:5.1f}%",
+              f"  share of characters differing from input     {100*d['drift_char_share']:5.2f}%", "",
+              "  A drifted narrative contributes NO spans. In deployment you ship the",
+              "  writer's OUTPUT, so if that text differs from the input it is not a",
+              "  redaction of the input and cannot be credited as one.", ""]
+
     cats = sorted({c for runs in report.values() for r in runs for c in r["per_cat"]},
                   key=lambda c: (TS.TIER.get(c, 9) if hasattr(TS, "TIER") else 9, c))
     L += ["", "-" * 76, "PER-CATEGORY RECALL  (mean across seeds, ± spread)", "",

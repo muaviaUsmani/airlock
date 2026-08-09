@@ -39,10 +39,26 @@ rsync -az -e "$SSH -p $PORT" \
 rsync -az -e "$SSH -p $PORT" \
       data/synthetic/injected_*.parquet "$REMOTE:$DEST/data/synthetic/"
 
-echo "==> installing deps (torch is usually preinstalled on vast pytorch images)"
-$SSH -p "$PORT" "$REMOTE" "cd $DEST && python -m pip install -q --upgrade \
-    'transformers>=4.44' 'pandas>=2.2' pyarrow accelerate sentencepiece protobuf peft"
+echo "==> locating python on the remote"
+# vast pytorch images put the real interpreter in a venv that is NOT on PATH for
+# a non-interactive ssh session, so a bare `python` fails with "command not
+# found" and the dependency install silently does nothing. Resolve it explicitly.
+RPY=$($SSH -p "$PORT" "$REMOTE" 'for p in /venv/main/bin/python /opt/conda/bin/python python3; do
+        command -v "$p" >/dev/null 2>&1 && "$p" -c "import torch" 2>/dev/null && { echo "$p"; exit 0; }
+      done
+      for p in /venv/main/bin/python /opt/conda/bin/python python3; do
+        command -v "$p" >/dev/null 2>&1 && { echo "$p"; exit 0; }
+      done' | tr -d '\r')
+[ -n "$RPY" ] || { echo "no python found on remote"; exit 1; }
+echo "    using $RPY"
+
+echo "==> installing deps"
+$SSH -p "$PORT" "$REMOTE" "cd $DEST && $RPY -m pip install -q --upgrade \
+    'transformers>=4.44' 'pandas>=2.2' pyarrow accelerate sentencepiece protobuf peft" \
+  || { echo "dependency install FAILED"; exit 1; }
+$SSH -p "$PORT" "$REMOTE" "$RPY -c 'import torch,transformers,peft;print(\"    verified:\",torch.__version__,transformers.__version__,peft.__version__)'" \
+  || { echo "imports FAILED after install"; exit 1; }
 
 echo
 echo "Ready. Train with:"
-echo "  $SSH -p $PORT $REMOTE 'cd $DEST && bash scripts/train_all_seeds.sh'"
+echo "  $SSH -p $PORT $REMOTE \"cd $DEST && PY=$RPY bash scripts/train_all_seeds.sh\""
