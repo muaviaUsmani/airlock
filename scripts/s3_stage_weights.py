@@ -44,18 +44,21 @@ from pathlib import Path
 import boto3
 from botocore.config import Config
 
-# Bucket name is read from the environment: the one in use embeds an AWS
-# account id, and this repository may be published. Account ids are not secret,
-# but there is no reason to put one in a portfolio repo.
-BUCKET = os.environ.get("AIRLOCK_S3_BUCKET", "")
+# The published bucket. Named so it carries no account identifier -- the
+# original was `airlock-weights-<account-id>`, which is why this is overridable
+# and why the name is checked rather than assumed.
+BUCKET = os.environ.get("AIRLOCK_PUBLIC_BUCKET", "airlock-redaction")
 PROFILE = "default"
 REGION = "us-east-1"
 PREFIX = "m3"
 
-REMOTE_ROOT = "/workspace/airlock"
-SSH_KEY = str(Path.home() / ".ssh" / "airlock_vast")
-SSH_PORT = "12624"
-SSH_HOST = "root@137.175.76.24"
+# The rented box this was written for is destroyed and its address has been
+# reassigned to someone else, so nothing here is hardcoded. Set these if you
+# ever need to drain another rented instance.
+REMOTE_ROOT = os.environ.get("AIRLOCK_REMOTE_ROOT", "/workspace/airlock")
+SSH_KEY = os.environ.get("AIRLOCK_SSH_KEY", str(Path.home() / ".ssh" / "airlock_vast"))
+SSH_PORT = os.environ.get("AIRLOCK_SSH_PORT", "22")
+SSH_HOST = os.environ.get("AIRLOCK_SSH_HOST", "")
 
 PART_SIZE = 64 * 1024 * 1024  # S3 minimum is 5MiB; 64 keeps the part count low.
 URL_TTL = 12 * 60 * 60  # Long enough to survive a slow overnight transfer.
@@ -87,9 +90,13 @@ SSH = [
 def ssh(cmd: str) -> str:
     """Run a command on the box and return stdout, raising if it failed.
 
+    Requires AIRLOCK_SSH_HOST; there is no default host to fall back to.
+
     Deliberately not piped through grep/tail: a previous session lost hours to a
     remote command that failed while its pipeline reported success.
     """
+    if not SSH_HOST:
+        sys.exit("set AIRLOCK_SSH_HOST (e.g. root@1.2.3.4) — no default host")
     r = subprocess.run(SSH + [cmd], capture_output=True, text=True)
     if r.returncode != 0:
         raise RuntimeError(f"ssh failed ({r.returncode}): {cmd}\n{r.stderr}")
@@ -98,7 +105,7 @@ def ssh(cmd: str) -> str:
 
 def _require_bucket() -> None:
     if not BUCKET:
-        sys.exit("set AIRLOCK_S3_BUCKET (see .secrets/README.md)")
+        sys.exit("set AIRLOCK_PUBLIC_BUCKET")
 
 
 def s3_client():

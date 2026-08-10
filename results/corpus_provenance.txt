@@ -6,4 +6,4 @@ bytes:           9059147731
 sha256:          590a5f5903a986c9fb6365cda0845445e207f7724b3cb3c81d9f5737362f7fe8
 downloaded_utc:  2026-08-06T13:36:12Z
 archived_utc:    2026-08-09T17:07:35Z
-archived_to:     s3://$AIRLOCK_S3_BUCKET/data/raw/complaints.csv
+archived_to:     s3://airlock-redaction/data/raw/complaints.csv

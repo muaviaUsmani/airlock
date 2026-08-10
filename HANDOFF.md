@@ -22,12 +22,12 @@ hours. No rented hardware is running.
 
 ## 2. Where everything lives
 
-All ten trained models are in S3, **sha256-verified round-trip** against the box
-before it was destroyed.
+**Public, read-only, no AWS account needed:** `s3://airlock-redaction/`
+(see [decision 018](DECISIONS/018-publishing-the-weights.md)).
 
 ```bash
-export AIRLOCK_S3_BUCKET=<the bucket>          # see .secrets/env
-aws s3 ls s3://$AIRLOCK_S3_BUCKET/ --recursive --summarize --human-readable
+scripts/fetch_weights.sh repro                 # models + synthetic data
+aws s3 ls s3://airlock-redaction/ --recursive --human-readable --no-sign-request
 ```
 
 | prefix | contents |
@@ -36,6 +36,11 @@ aws s3 ls s3://$AIRLOCK_S3_BUCKET/ --recursive --summarize --human-readable
 | `data/raw/` | `complaints.csv` + `PROVENANCE.txt` (sha256-stamped) |
 | `data/interim/`, `data/synthetic/` | derived parquet |
 | `results/` | every results file and run log |
+
+The earlier private bucket was verified against this one and **deleted**, so
+this is the only copy. A $5/month budget (`airlock-s3-guard`) emails on egress,
+and `scripts/s3_public_killswitch.sh off` takes it private immediately — the
+alarm notifies, the switch is what stops it.
 
 Local: `micro-s20260806/07` were already here; `base2-s20260806` and
 `micro-s20260808` were pulled back from S3 for M5.
@@ -117,12 +122,13 @@ fair tuning. The gap to micro is **267×, not 690×**.
 
 ## 6. Still owed
 
-- **`make repro` — blocked on a decision, not on work.** It stops at M4 and still
-  points at the old single-model path. Fixing the wiring is easy; the blocker is
-  that [decision 011](DECISIONS/011-training-moves-to-rented-gpu.md) requires
-  repro to *publish* weights so it need not retrain — and a private bucket is
-  backup, not publication. **Fork: public bucket, Hugging Face Hub, or accept
-  that repro retrains.** Human's call.
+- **`make repro` — now unblocked, still unwired.** The fork is resolved: weights
+  are public ([decision 018](DECISIONS/018-publishing-the-weights.md)) and
+  `scripts/fetch_weights.sh repro` pulls them anonymously, which is what
+  [decision 011](DECISIONS/011-training-moves-to-rented-gpu.md) required. What
+  remains is mechanical: the Makefile stops at M4 and still points at the old
+  single-model path, so it does not regenerate the four-arm numbers now in the
+  README. It has never been run end to end from a clean checkout.
 - **Two known-false numbers still in `m3_arms.txt`**, both flagged in the README:
   per-category recall prints `0.0%` for methods that were never run, and the
   "INFERENCE COST ON THE M1" block prints `0 MB` / `7 MB` from a run on a GPU box.

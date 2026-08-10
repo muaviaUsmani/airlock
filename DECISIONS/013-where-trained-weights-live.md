@@ -86,8 +86,12 @@ The generated manifest contains those presigned URLs, which are write
 capabilities for the bucket. It is written to `.secrets/` (gitignored), never to
 `results/`, which is committed.
 
-The bucket (named via `AIRLOCK_S3_BUCKET`, kept out of the repository because the
-name embeds an AWS account id) has public access blocked and SSE-AES256 on.
+The bucket used here was `airlock-weights-<account-id>` — private, access
+blocked, SSE-AES256. **Superseded the same day by
+[decision 018](018-publishing-the-weights.md):** the account id in the name kept
+it out of the repository, and a private bucket does not satisfy decision 011's
+requirement to *publish* weights. Its contents were moved to the public
+`airlock-redaction` and it was deleted.
 
 ## Consequences
 

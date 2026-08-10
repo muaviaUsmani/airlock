@@ -184,6 +184,40 @@ trusts without re-deriving, which makes an unverified claim in one more costly t
 
 ---
 
+## Getting the models and data
+
+Everything is published read-only, and **no AWS account is needed** — these send
+no credentials:
+
+```bash
+scripts/fetch_weights.sh repro     # models + synthetic data (7.5 GiB) — what make repro needs
+scripts/fetch_weights.sh corpus    # the pinned CFPB snapshot (8.4 GiB), verified against its sha256
+scripts/fetch_weights.sh all       # everything (15.9 GiB)
+```
+
+Or directly:
+
+```bash
+aws s3 sync s3://airlock-redaction/m3/models models --no-sign-request
+curl -O https://airlock-redaction.s3.amazonaws.com/results/m5_utility.txt
+```
+
+| prefix | size | what it is |
+|---|---:|---|
+| `m3/models/` | 7.3 GiB | the ten trained arms — micro ×3, base2 ×3, large ×3, writer |
+| `data/synthetic/` | 85 MiB | the injected sets the models were trained and evaluated on |
+| `data/interim/` | 138 MiB | filtered credit-card narratives |
+| `data/raw/` | 8.4 GiB | the pinned CFPB snapshot and its `PROVENANCE.txt` |
+| `results/` | 305 KiB | every results file and run log |
+
+**The corpus is the only artifact here that cannot be regenerated.** Its source
+URL is a rolling snapshot with no versioning, so the 2026-08-06 bytes every
+number was computed from vanish whenever the CFPB republishes. That is why it is
+mirrored with a sha256, and why `fetch_weights.sh` checks it.
+See [decision 018](DECISIONS/018-publishing-the-weights.md).
+
+---
+
 ## The claim this project is trying to earn
 
 > On real credit-card complaint narratives, a **372MB** model running on a laptop removes

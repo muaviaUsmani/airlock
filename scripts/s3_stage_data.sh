@@ -27,7 +27,7 @@
 
 set -euo pipefail
 
-BUCKET="${AIRLOCK_S3_BUCKET:?set AIRLOCK_S3_BUCKET (see .secrets/README.md)}"
+BUCKET="${AIRLOCK_PUBLIC_BUCKET:-airlock-redaction}"
 PROFILE="${AWS_PROFILE:-default}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DRY=""
@@ -51,7 +51,7 @@ if [[ -f "$CORPUS" && ! -f "$PROV" ]]; then
     echo "sha256:          $SHA"
     echo "downloaded_utc:  $(date -u -r "$(stat -f%m "$CORPUS")" '+%Y-%m-%dT%H:%M:%SZ')"
     echo "archived_utc:    $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-    echo "archived_to:     s3://\$AIRLOCK_S3_BUCKET/data/raw/complaints.csv"
+    echo "archived_to:     s3://$BUCKET/data/raw/complaints.csv"
   } > "$PROV"
   echo "  wrote $PROV"
 fi
