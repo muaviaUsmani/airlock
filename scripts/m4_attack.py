@@ -261,9 +261,16 @@ def main() -> int:
     ap.add_argument("--model-dir", default=str(MODEL_DIR),
                     help="which trained encoder to attack the output of")
     ap.add_argument("--set", default="natural_v2", help="natural (marker-derived) or natural_v2 (decision 007)")
+    # Smoke-test hook only. The published attack runs the whole set; capping it
+    # changes the headline, so anything but 0 marks the output as not publishable.
+    ap.add_argument("--n", type=int, default=0,
+                    help="cap narratives (wiring check only — NOT a publishable run)")
     args = ap.parse_args()
 
     inj = pd.read_parquet(SYN / f"injected_{args.set}.parquet")
+    if args.n:
+        inj = inj.head(args.n)
+        print(f"  !! --n {args.n}: SAMPLE RUN, not the published attack", flush=True)
     cdf = pd.read_parquet(SYN / "customers.parquet")
     tdf = pd.read_parquet(SYN / "transactions.parquet")
     texts = inj["text"].tolist()

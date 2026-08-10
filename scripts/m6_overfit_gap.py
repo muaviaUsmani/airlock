@@ -94,7 +94,10 @@ def load_set(name: str, n: int):
     """
     if name == "__surrogate__":
         import m3_transfer_surrogate as TS
-        df = TS.build_set(TS.N)
+        # Honour --n here too. It used to build the full set regardless, so a
+        # "--n 60 wiring check" still scored 2,492 narratives against nine arms
+        # and took the best part of an hour -- a smoke test that is not smoke.
+        df = TS.build_set(TS.N if n >= TS.N else n)
         texts = df["text"].tolist()
         truths = [[(s["start"], s["end"], s["category"]) for s in sp] for sp in df["spans"]]
         unfilled = df["unfilled"].tolist()

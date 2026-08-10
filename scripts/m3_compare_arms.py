@@ -61,8 +61,21 @@ TIER = TS.TIER if hasattr(TS, "TIER") else {}
 
 
 def peak_mem_mb() -> float:
+    """Peak RSS in MB.
+
+    ru_maxrss is in BYTES on macOS and KILOBYTES on Linux. Assuming bytes
+    everywhere under-reported a run on the Linux GPU box by 1000x, and it was
+    published as "peak process memory 7 MB" for a job holding several GB.
+    """
     import resource
-    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6  # macOS reports bytes
+    import sys as _sys
+    raw = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return raw / 1e6 if _sys.platform == "darwin" else raw / 1e3
+
+
+ARM_LABEL = {"micro": "encoder micro 70.7M", "base2": "encoder base 184M",
+             "large": "encoder large 434M", "writer": "writer Qwen3 0.6B",
+             "regex": "regex", "spacy": "spacy", "presidio": "presidio"}
 
 
 def main() -> int:
@@ -195,8 +208,10 @@ def main() -> int:
         pm, ps = agg([x["precision"] for x in runs])
         fm, fs = agg([x["f1"] for x in runs])
         cm, _ = agg([x["cat_acc"] or 0 for x in runs])
-        label = {"micro": "encoder micro 22M", "base2": "encoder base 184M",
-                 "large": "encoder large 434M", "writer": "writer Qwen3 0.6B"}.get(name, name)
+        # 70.7M, not 22M: deberta-v3-xsmall has a 22M backbone and a 128k-vocab
+        # embedding table on top. Both figures are real, but the throughput table
+        # and the README quote the total, so this one has to as well.
+        label = ARM_LABEL.get(name, name)
 
         def cell(m, sd):
             return f"{100*m:5.1f}% ±{100*sd:4.1f}" if len(runs) > 1 else f"{100*m:5.1f}%       "
@@ -226,53 +241,80 @@ def main() -> int:
 
     cats = sorted({c for runs in report.values() for r in runs for c in r["per_cat"]},
                   key=lambda c: (TS.TIER.get(c, 9) if hasattr(TS, "TIER") else 9, c))
-    L += ["", "-" * 76, "PER-CATEGORY RECALL  (mean across seeds, ± spread)", "",
-          f"  {'category':<18} {'n':>6} {'presidio':>10} {'spacy':>10} "
-          f"{'authored':>15} {'HARDENED':>15}  {'delta':>8}"]
+
+    # Columns are whatever actually ran. This table used to be hardcoded to the
+    # arms named "authored" and "HARDENED", which have not existed since the
+    # four-arm comparison replaced them -- so every cell rendered from a missing
+    # key, and a method that was never run printed as "0.0%" rather than as
+    # absent. A method that was not measured must never render as a number.
+    cat_methods = [m for m in ("regex", "spacy", "presidio") if m in report] + \
+                  [a for a in ARMS if a in report]
+    L += ["", "-" * 76, "PER-CATEGORY RECALL  (mean across seeds, ± spread)", ""]
+    if not any(m in report for m in ("regex", "spacy", "presidio")):
+        L += ["  Baselines were not run (--no-baselines); their columns are omitted",
+              "  rather than shown as zero. Run without that flag to compare.", ""]
+    L.append(f"  {'category':<18} {'n':>6}" + "".join(f"{ARM_LABEL.get(m, m):>21}"
+                                                      for m in cat_methods))
+
+    def cat_mean(name, cat):
+        if name not in report:
+            return None, None
+        v = [r["per_cat"].get(cat, [0, 0])[0] / max(r["per_cat"].get(cat, [0, 1])[1], 1)
+             for r in report[name] if cat in r["per_cat"]]
+        return agg(v) if v else (None, None)
+
     for cat in cats:
         n = max((r["per_cat"].get(cat, [0, 0])[1] for runs in report.values() for r in runs),
                 default=0)
         if n == 0:
             continue
-
-        def cat_mean(name):
-            if name not in report:
-                return None, None
-            v = [r["per_cat"].get(cat, [0, 0])[0] / max(r["per_cat"].get(cat, [0, 1])[1], 1)
-                 for r in report[name] if cat in r["per_cat"]]
-            return agg(v) if v else (None, None)
-
-        pres, _ = cat_mean("presidio")
-        spac, _ = cat_mean("spacy")
-        am, asd = cat_mean("authored")
-        hm, hsd = cat_mean("hard")
-        delta = (hm - am) if (hm is not None and am is not None) else None
-        L.append(
-            f"  {cat:<18} {n:>6,} "
-            f"{100*pres if pres is not None else 0:>9.1f}% "
-            f"{100*spac if spac is not None else 0:>9.1f}% "
-            f"{f'{100*am:5.1f} ±{100*asd:4.1f}' if am is not None else '-':>15} "
-            f"{f'{100*hm:5.1f} ±{100*hsd:4.1f}' if hm is not None else '-':>15} "
-            f"{f'{100*delta:+7.1f}' if delta is not None else '-':>8}")
-        for name, key in (("authored", "authored"), ("hard", "hard")):
-            for r in report.get(key, []):
+        cells = ""
+        for m in cat_methods:
+            mu, sd = cat_mean(m, cat)
+            if mu is None:
+                cells += f"{'not run':>21}"
+            elif len(report[m]) > 1:
+                cells += f"{f'{100*mu:5.1f} ±{100*sd:4.1f}':>21}"
+            else:
+                cells += f"{f'{100*mu:5.1f}':>21}"
+        L.append(f"  {cat:<18} {n:>6,}" + cells)
+        for m in cat_methods:
+            for r in report.get(m, []):
                 h, t = r["per_cat"].get(cat, [0, 0])
-                rows.append({"method": f"encoder ({name})", "seed": r.get("seed", ""),
+                if t == 0:
+                    continue
+                rows.append({"method": ARM_LABEL.get(m, m), "seed": r.get("seed", ""),
                              "category": cat, "recall_pct": round(100*h/max(t, 1), 2),
                              "precision_pct": "", "f1_pct": "", "category_accuracy_pct": "",
                              "tp": h, "fp": "", "fn": t-h, "ms_per_narrative": ""})
 
-    # --- inference cost, on the laptop -------------------------------------
-    L += ["", "-" * 76, "INFERENCE COST ON THE M1  (this is the claim, decision 011)", ""]
-    for arm in ("authored", "hard"):
-        if arm in report:
-            ms, _ = agg([r["ms_per_narrative"] for r in report[arm]])
-            L.append(f"  encoder ({arm:<8})  {ms:6.0f} ms/narrative   "
-                     f"{1000/ms:5.1f} narratives/sec")
-    size = sum(f.stat().st_size for f in (MODELS / "encoder-hard-s20260806").rglob("*")
-               if f.is_file()) / 1e6 if (MODELS / "encoder-hard-s20260806").exists() else 0
-    L += [f"  model on disk       {size:6.0f} MB  (fp32; fp16 export would be ~{size/2:.0f} MB)",
-          f"  peak process memory {peak_mem_mb():6.0f} MB"]
+    # --- inference cost, and where it was actually measured ----------------
+    # Decision 011 requires the latency claim to be measured on the M1. This
+    # block used to assert that in its heading regardless of the hardware it ran
+    # on, and it published "0 MB / 7 MB" from a run on a rented GPU -- 0 because
+    # it sized a model directory that no longer exists, 7 because ru_maxrss is
+    # kilobytes on Linux. It now names the device and refuses the M1 claim when
+    # it is not on one.
+    on_m1 = dev.type == "mps"
+    heading = ("INFERENCE COST ON THE M1  (this is the claim, decision 011)" if on_m1
+               else f"INFERENCE COST on {dev.type.upper()}  — NOT the M1 claim")
+    L += ["", "-" * 76, heading, ""]
+    if not on_m1:
+        L += ["  Decision 011 requires the published latency to come from the M1.",
+              "  These figures were measured elsewhere and are indicative only;",
+              "  re-run this on the laptop before quoting them.", ""]
+    for arm in ARMS:
+        if arm not in report:
+            continue
+        ms, _ = agg([r["ms_per_narrative"] for r in report[arm]])
+        d = sorted(MODELS.glob(f"encoder-{arm}-s*"))
+        size = (sum(f.stat().st_size for f in d[0].rglob("*") if f.is_file()) / 1e6
+                if d else 0.0)
+        size_cell = f"{size:6.0f} MB" if size else "     ?"
+        L.append(f"  {ARM_LABEL.get(arm, arm):<22} {ms:6.0f} ms/narrative   "
+                 f"{1000/ms:6.1f} narr/sec   on disk {size_cell}")
+    L += ["", f"  peak process memory   {peak_mem_mb():6.0f} MB",
+          "  (fp32 on disk; an fp16 export would be about half)"]
 
     out = "\n".join(L)
     RESULTS.mkdir(parents=True, exist_ok=True)

@@ -61,25 +61,110 @@ $(RESULTS)/m2_synthetic_summary.txt:
 $(RESULTS)/m2_injection_summary.txt: $(RESULTS)/m2_category_distribution.txt $(RESULTS)/m2_synthetic_summary.txt
 	$(PY) scripts/m2_inject.py
 
+# --- weights ----------------------------------------------------------------
+# Decision 011 commits repro to NOT retraining: "a repro that silently requires
+# a rented A100 is not a repro". The published arms are fetched instead, from a
+# public bucket, anonymously. Retraining them is still possible and still
+# reproducible (fixed seeds) — see `make train` — it just is not required.
+
+MICRO := models/encoder-micro-s20260806/model.safetensors
+
+.PHONY: weights
+weights: $(MICRO)  ## Fetch the published trained arms (7.3 GiB, no AWS account needed)
+
+$(MICRO):
+	./scripts/fetch_weights.sh models
+
+.PHONY: train
+train:  ## Retrain every arm from scratch instead of fetching (needs CUDA, ~1.5h)
+	./scripts/train_all_seeds.sh
+
 .PHONY: m3
-m3: $(RESULTS)/m3_comparison.txt  ## M3: train the model and compare every method
+m3: $(RESULTS)/m3_arms.txt  ## M3: compare every method on real prose
 
-models/airlock-encoder/checkpoint.json: $(RESULTS)/m2_injection_summary.txt
-	$(PY) scripts/m3_train_encoder.py
-
-$(RESULTS)/m3_comparison.txt: models/airlock-encoder/checkpoint.json
-	$(PY) scripts/m3_evaluate.py
+# The four-arm comparison is the published one. `m3_evaluate.py` produced the
+# older single-model m3_comparison.txt and no longer backs any README number.
+# Baselines are deliberately left ON: with --no-baselines their per-category
+# column used to render as "0.0%", which reads as measured-and-failed.
+$(RESULTS)/m3_arms.txt: $(RESULTS)/m2_injection_summary.txt $(MICRO)
+	$(PY) scripts/m3_compare_arms.py --arms micro,base2,large
 
 .PHONY: m4
 m4: $(RESULTS)/m4_attack.txt  ## M4: the attack — the headline
 
-$(RESULTS)/m4_attack.txt: $(RESULTS)/m3_comparison.txt
+$(RESULTS)/m4_attack.txt: $(RESULTS)/m3_arms.txt
 	$(PY) scripts/m4_attack.py --set natural_v2
 
+.PHONY: m5
+m5: $(RESULTS)/m5_utility.txt  ## M5: does the redacted text still answer questions?
+
+# The only part of the project that needs a credential, read from the
+# environment (constitution principle VI). Costs roughly $2 of Haiku calls.
+$(RESULTS)/m5_utility.txt: $(RESULTS)/m4_attack.txt
+	@test -n "$$ANTHROPIC_API_KEY" || { \
+		echo "ANTHROPIC_API_KEY is not set — see .secrets/README.md."; \
+		echo "M5 is the one milestone that needs a key; everything else runs without one."; \
+		exit 1; }
+	$(PY) scripts/m5_utility.py --n 250 --methods raw,presidio,airlock,spacy
+
+.PHONY: m6
+m6: $(RESULTS)/m6_dbsize.txt $(RESULTS)/m6_overfit_gap.txt  ## M6: ablations that need no GPU
+
+$(RESULTS)/m6_dbsize.txt: $(RESULTS)/m4_attack.txt
+	$(PY) scripts/m6_ablate_dbsize.py
+
+$(RESULTS)/m6_overfit_gap.txt: $(RESULTS)/m3_arms.txt
+	$(PY) scripts/m6_overfit_gap.py --n 4000 --arms micro,base2,large
+
 .PHONY: repro
-repro: m0 m1 m2 m3 m4  ## Regenerate every number in the README from scratch
+repro: repro-banner m0 m1 m2 m3 m4 m5 m6  ## Regenerate every number in the README from scratch
 	@echo
-	@echo "Milestones beyond M4 are not built yet."
+	@echo "Regenerated: m0 m1 m2 m3 m4 m5 m6"
+	@echo
+	@echo "NOT regenerated here, and each says so where it is published:"
+	@echo "  writer arm accuracy + cost       — needs CUDA; run 'make gpu-arms'"
+	@echo "  m6 data-scaling / epoch ablation — needs CUDA; trains 9 arms (~50 min)"
+
+# Stating the cost before spending it, rather than after — the same rule the
+# constitution applies to GPU spend (principle I.3).
+#
+# The seven-hour figure is an ESTIMATE, not a measurement: micro was timed on an
+# M1 at ~72 ms/narrative and the other two arms were scaled from their GPU ratio.
+# It is here to set expectations, and it is not published as a result anywhere.
+.PHONY: repro-banner
+repro-banner:
+	@echo "make repro regenerates every published number. On an M1 that is about"
+	@echo "SEVEN HOURS, most of it m6_overfit_gap (4 sets x 9 arms, ~5.7h alone)."
+	@echo "M5 also spends roughly \$$2 of Anthropic API credit."
+	@echo
+	@echo "To check the wiring instead, without the wait:  make repro-smoke"
+	@echo
+
+# Same chain, same scripts, tiny samples. Proves every milestone still runs and
+# still hands the next one what it expects. The scripts write to results/
+# unconditionally, so it backs that directory up and restores it afterwards —
+# otherwise a smoke run would silently replace published numbers with
+# small-sample ones that look identical.
+.PHONY: repro-smoke
+repro-smoke:  ## Run the whole chain at small n to prove the wiring (~3 min)
+	./scripts/repro_smoke.sh
+
+# --- targets that require a GPU ----------------------------------------------
+# Kept out of `repro` deliberately. The writer generates ~365 tokens per
+# narrative; on an M1 that is hours, so a repro that included it would not
+# finish on the hardware this project claims to run on.
+
+.PHONY: gpu-arms
+gpu-arms: $(RESULTS)/m3_writer_cost.txt $(RESULTS)/m6_data_scaling.txt $(RESULTS)/m6_epoch_ablation.txt  ## Everything needing CUDA
+
+$(RESULTS)/m3_writer_cost.txt:
+	$(PY) scripts/m3_writer_cost.py --n 300
+
+$(RESULTS)/m6_data_scaling.txt:
+	./scripts/m6_data_scaling.sh && $(PY) scripts/m6_data_scaling.py
+
+$(RESULTS)/m6_epoch_ablation.txt:
+	./scripts/m6_epoch_ablation.sh && $(PY) scripts/m6_epoch_ablation.py
 
 .PHONY: prune
 prune:  ## Delete build artifacts that are regenerable — weights, archives, caches
@@ -97,7 +182,12 @@ prune:  ## Delete build artifacts that are regenerable — weights, archives, ca
 
 .PHONY: prune-superseded
 prune-superseded:  ## Also delete arm weights whose numbers have been superseded
+	@echo "Removing the authored/ and hard/ arms. The four-arm comparison"
+	@echo "(micro, base2, large, writer) replaced them and no published number"
+	@echo "cites them any more. They are rebuildable from scripts/train_all_seeds.sh,"
+	@echo "and the surviving arms are re-fetchable with 'make weights'."
 	rm -rf models/encoder-authored-s* models/encoder-hard-s*
+	rm -rf models/airlock-encoder models/airlock-encoder-ep1
 	@du -sh models 2>/dev/null || true
 
 .PHONY: clean

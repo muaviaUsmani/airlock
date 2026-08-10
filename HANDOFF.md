@@ -122,21 +122,62 @@ fair tuning. The gap to micro is **267×, not 690×**.
 
 ## 6. Still owed
 
-- **`make repro` — now unblocked, still unwired.** The fork is resolved: weights
-  are public ([decision 018](DECISIONS/018-publishing-the-weights.md)) and
-  `scripts/fetch_weights.sh repro` pulls them anonymously, which is what
-  [decision 011](DECISIONS/011-training-moves-to-rented-gpu.md) required. What
-  remains is mechanical: the Makefile stops at M4 and still points at the old
-  single-model path, so it does not regenerate the four-arm numbers now in the
-  README. It has never been run end to end from a clean checkout.
-- **Two known-false numbers still in `m3_arms.txt`**, both flagged in the README:
-  per-category recall prints `0.0%` for methods that were never run, and the
-  "INFERENCE COST ON THE M1" block prints `0 MB` / `7 MB` from a run on a GPU box.
-- `docs/01-why.md`, `02-data.md`, `06-utility.md` are stubs. `06-utility.md`
-  now has real numbers to write up.
-- `make prune-superseded` — reclaims 4.2 GB of superseded local weights.
+- **The M3 numbers in `results/` were produced on the GPU box, not by the new
+  wiring.** `make repro` is correct and proven (see below), but nobody has yet
+  spent the seven hours to regenerate the published tables through it. The one
+  thing that changes when they do: the M1 inference block, which now measures
+  the real laptop instead of printing `0 MB`.
+- **A full `make repro` costs ~7 hours on an M1 and ~$2 of API credit.** Most of
+  it is `m6_overfit_gap` (~5.7h). `make repro-smoke` proves the chain in ~3 min
+  and restores `results/` afterwards.
+- `make prune-superseded` — reclaims 4.2 GB of superseded local weights. Still
+  not run.
 - The span-emitting writer ([decision 016](DECISIONS/016-span-emitting-writer-proposed.md))
-  is proposed and costed, not built.
+  is proposed and costed, not built. This is the most promising open thread:
+  predicted to remove the writer's 26.3% unparseable rate outright.
+- A fair size comparison ([decision 017](DECISIONS/017-the-training-recipe-invalidates-the-size-comparison.md))
+  needs a dev/test split, per-arm early stopping and a per-scale learning rate.
+  ~5-6 GPU-hours. Worth reading the caveat first: the effect is smaller than the
+  seed noise, so the likely honest answer is "indistinguishable".
+
+## 6a. Two things found while writing the docs
+
+- **`m5_utility.py` hardcoded the leakage column** of the trade table
+  (`leak = {"raw": 36.9, ...}`) rather than reading M4. It had drifted out of
+  agreement with `results/m4_attack.txt`, which reports 14.3% for raw — because
+  the canonical database is 40,000 customers and the 36.9% figure is from the
+  10,000 sweep. Re-identification is strongly population dependent, so **a
+  leakage rate without its database size is not a number**. The script now reads
+  the live M4 run when present and names its source either way.
+- **Two README claims described things that did not exist**: a "372MB model"
+  (no file was ever that size — 372 is half of a *different* arm's 743.8 MB, from
+  a "fp16 export would be…" line that lost its conditional) and a `specs/`
+  directory of per-milestone specifications. Both corrected and recorded.
+
+## 6b. Fixed since the morning handoff
+
+- **`make repro` is wired and verified end to end.** It fetches published weights
+  rather than retraining (decision 011), covers m0–m6, and `make repro-smoke`
+  runs the identical chain at n=60 in ~3 minutes. Verified: the chain completes,
+  and `results/` is byte-identical afterwards.
+- **Both known-false numbers in `m3_arms.txt` are fixed.** Both had the same
+  cause — the report was still keyed to the arms `authored` and `hard`, which
+  stopped existing when the four-arm comparison replaced them. Per-category
+  recall rendered every missing method as `0.0%`; it now prints `not run` and
+  omits absent baselines. The "INFERENCE COST ON THE M1" block sized a model
+  directory that no longer existed (`0 MB`) and read `ru_maxrss` as bytes on
+  Linux (`7 MB` for a multi-GB job); it now names the device it actually ran on,
+  refuses the M1 claim when not on an M1, and gets the units right. First real
+  M1 measurement: **72 ms/narrative, 291 MB on disk, 4,188 MB peak.**
+- **`docs/01-why.md` and `docs/06-utility.md` written.** `docs/02-data.md` was
+  listed as a stub in the previous handoff and was not — it was already 210
+  lines. Third stale claim found in that document.
+- **README restructured** into: what this is, a product-minded case study (pivots,
+  why every fork was built, what broke, what was left as an educated guess,
+  metrics), a pointer to the new [setup guide](docs/00-setup.md), and technical
+  TLDRs that link out rather than explain inline.
+- **`docs/00-setup.md` written** — Mac, GPU, Docker, the one API key, per-stage
+  runtimes, and a troubleshooting section.
 
 ---
 

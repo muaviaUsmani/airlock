@@ -343,7 +343,31 @@ def main() -> int:
     if base is not None:
         L += ["", "-" * 72, "THE TRADE — leakage against usefulness", "",
               f"  {'method':<16} {'re-ident U':>11} {'utility':>9} {'utility lost':>14}"]
-        leak = {"raw": 36.9, "presidio": 1.2, "airlock": 0.2, "spacy": 0.0}
+        # These come from an M4 run against a 10,000-customer database. They were
+        # a bare hardcoded dict with no provenance, which is how they drifted out
+        # of agreement with results/m4_attack.txt without anything noticing: the
+        # canonical database is currently 40,000 customers, where raw scores
+        # 14.3% rather than 36.9%. Re-identification is strongly population
+        # dependent (results/m6_dbsize.txt), so a leakage number means nothing
+        # without the database size attached.
+        #
+        # Preference order: read the live M4 run; fall back to the recorded 10k
+        # sweep; say which was used either way.
+        LEAK_10K = {"raw": 36.9, "presidio": 1.2, "airlock": 0.2, "spacy": 0.0}
+        leak, leak_src = dict(LEAK_10K), "recorded 10,000-customer sweep (m6_dbsize)"
+        m4_csv = RESULTS / "m4_attack.csv"
+        if m4_csv.exists():
+            try:
+                m4 = pd.read_csv(m4_csv)
+                best = m4[m4.method == "raw"].sort_values("U_unique_pct", ascending=False).iloc[0]
+                sub = m4[(m4.fields == best.fields) & (m4.amount_tol == best.amount_tol) &
+                         (m4.date_tol_days == best.date_tol_days)]
+                live = {str(r["method"]): float(r["U_unique_pct"]) for _, r in sub.iterrows()}
+                if "raw" in live:
+                    leak.update(live)
+                    leak_src = f"live results/m4_attack.csv (raw U = {live['raw']:.1f}%)"
+            except Exception as e:  # never let a reporting nicety kill the run
+                print(f"  (could not read m4_attack.csv: {e})", file=sys.stderr)
         for name, r in per_method.items():
             overall = 100 * sum(r["correct"].values()) / max(sum(r["graded"].values()), 1)
             # "airlock:micro" and "airlock:base2" share M4's airlock leakage
@@ -351,7 +375,12 @@ def main() -> int:
             u = leak.get(name.split(":")[0], float("nan"))
             L.append(f"  {name:<16} {u:>10.1f}% {overall:>8.1f}% "
                      f"{base-overall:>13.1f}")
-        L += ["", "  Re-identification from M4 (natural_v2, 10,000-customer database).",
+        L += ["", f"  Re-identification source: {leak_src}.",
+              "  That number is POPULATION DEPENDENT — raw text scores 19.1% against",
+              "  2,500 customers, 36.9% against 10,000 and 14.3% against 40,000",
+              "  (results/m6_dbsize.txt). A leakage rate quoted without its database",
+              "  size is not a number. The utility column beside it does not move.",
+              "",
               "  A redactor is only good if it moves DOWN the first column without",
               "  moving far down the second."]
     text = "\n".join(L)

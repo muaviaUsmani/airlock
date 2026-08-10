@@ -1,7 +1,7 @@
 # How re-identification is measured
 
-**Status: M4 complete. All five methods measured. The utility axis (M5) is not yet run — it
-needs a frontier model API key, and `collateral` stands in for it until then.**
+**Status: M4 complete. All five methods measured. The utility axis is now measured too — see
+[docs/06-utility.md](06-utility.md).**
 
 ---
 

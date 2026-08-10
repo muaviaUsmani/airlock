@@ -34,8 +34,9 @@ then almost three times faster again. The original number said more about us
 than about the method.
 
 **5. The notes we wrote for our own future reference contained things that were
-not true.** Two specific claims in our handover document did not survive being
-checked. We had been treating them as facts because we wrote them ourselves.
+not true.** Three specific claims in our handover document did not survive being
+checked — including one that sent us to rewrite a document that was already
+finished. We had been treating them as facts because we wrote them ourselves.
 
 **6. Some of the questions we used to measure "is this still useful?" were
 questions nobody could answer.** One asked what a company did about a complaint
@@ -56,7 +57,19 @@ are equally good, and one is cheaper," not a ranking.
 whether our own measurement was broken usually took minutes and repeatedly
 changed what we believed. The long training runs mostly confirmed things.
 
-**10. Writing down a plan is not the same as scheduling it.** The single most
+**10. The very first line of our own README quoted a size no file ever had.** It
+described the model as 372MB. That number was half of another model's size — a
+"this is what it would be if we converted it" figure, printed once, then quoted
+as though it were the thing itself. Nobody converted anything. The real number is
+291MB.
+
+**11. We built a safety net and then walked around it.** We wrote a check that
+backed up the published numbers before running a test that would overwrite them,
+and it worked exactly as designed — twice. Then we ran the underlying command
+directly instead of through it, and quietly replaced a published table with
+test output. Version control caught it, not the safety net.
+
+**12. Writing down a plan is not the same as scheduling it.** The single most
 expensive mistake in this project was a step that was described in three
 separate messages and never actually written into the script that was supposed
 to run it.
@@ -193,19 +206,26 @@ Recorded in [decision 016](../DECISIONS/016-span-emitting-writer-proposed.md).
 
 ### 5. Our own handover notes were not reliable
 
-Two claims in the document written specifically to bring the next person up to
+Three claims in the document written specifically to bring the next person up to
 speed did not survive checking. One said a particular measurement had scored
 zero; the committed evidence showed it was the highest-scoring of its group. The
-other said a piece of code was covered by tests; there were no tests for it
-anywhere in the project.
+second said a piece of code was covered by tests; there were no tests for it
+anywhere in the project. The third listed a document as an unwritten stub when it
+was already two hundred lines long — we only noticed because we opened it to
+write it.
 
 Neither was dishonest. Both were written from memory at the end of a long
 session, which is exactly when handover notes get written.
 
-**The transferable point:** a handover document is the one thing a later reader
-trusts without re-deriving, which makes an unchecked claim in it unusually
-expensive. Claims in handovers should either cite a file or be marked as
-uncertain.
+Our README had the same problem in a louder form: it described a directory of
+per-milestone specifications and plans, said where to find them, and explained
+what was in each one. That directory does not exist and never did. A reader
+would have gone looking for it.
+
+**The transferable point:** a handover document, and a README, are the things a
+later reader trusts without re-deriving — which makes an unchecked claim in one
+unusually expensive. Describing work that was never done is the same failure as
+publishing a number that was never measured; it just does not look like one.
 
 ### 6. The plumbing cost more than the science
 
@@ -245,7 +265,46 @@ happen at all — we only noticed while tidying up.
 **The transferable point:** identify which of your inputs is the one that cannot
 be regenerated, and treat it differently from everything else.
 
-### 8. A plan described is not a plan scheduled
+### 8. A hypothetical number one edit away from a real one
+
+The README's opening sentence described "a 372MB model". No such file has ever
+existed. 372 is exactly half of 743.8, the size of a *different* model, and it
+came from a line in an old report that read "an fp16 export would be ~372 MB" —
+a statement about a conversion nobody performed. Somewhere between that report
+and the README it lost the conditional and became the headline.
+
+It also named the wrong model: by then a 291MB model had replaced the one that
+figure referred to.
+
+**The transferable point:** keep hypothetical numbers visibly hypothetical, and
+keep them away from real ones. Ours sat on the same line as a measurement,
+formatted the same way, and it took an audit to notice the difference.
+
+### 9. A guard you can bypass is a guard you will bypass
+
+Several of our scripts write their results unconditionally. Running one at a
+small sample size to check it still worked would therefore overwrite a published
+table with a test result that looked exactly like a real one — same file, same
+format, plausible numbers.
+
+So we wrote a wrapper that copies the results aside, runs the chain, and restores
+them afterwards — on success, on failure, and on interrupt. It worked: we killed
+it twice mid-run and the published numbers came back byte-identical both times.
+
+Then we ran the underlying script directly, because we only wanted one quick
+check, and overwrote a published table without noticing. The numbers sat wrong
+for about an hour. What caught it was not the wrapper but **version control** —
+the file showed as modified, and the committed version still had the real
+numbers.
+
+**The transferable point:** if the unsafe path is still the shortest one, the
+safe path is decoration. Either the scripts should refuse to overwrite published
+output without being told to, or the results should be treated as build artifacts
+that never sit in the same place as the committed ones. And keep the generated
+numbers in version control regardless — it was the only thing that actually
+worked.
+
+### 10. A plan described is not a plan scheduled
 
 The single most expensive error in the project was not technical. A necessary
 step was described as "step one" in three separate messages and was never
