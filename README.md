@@ -29,14 +29,19 @@ belongs to.
 
 Two findings from that setup explain why the project exists at all:
 
-- **Names are not what identifies people.** In the synthetic database an exact
-  date identifies nobody (479 customers share one) and a merchant identifies
-  nobody (1,329 do). Put an amount, a date and a merchant together and you reach
-  **99.7% uniqueness**. None of those three is personal information. No PII
-  detector removes any of them.
-- **Professional redactors already miss this.** The CFPB's own trained staff,
-  working to a published standard, leave an intact dollar amount in **44.2%** of
-  narratives — the single strongest join key against a transaction database.
+- **Names stop identifying people; amounts and dates do not.** At 160,000
+  customers a full name is unique to **3.3%** of people and a card's last four
+  digits to **0.0%** — while an amount, a date and a merchant together still
+  identify **95.7%**. The fields a detector removes decay towards uselessness as
+  the population grows. The fields it ignores barely move.
+- **A professional redaction standard keeps the dangerous field on purpose.** The
+  CFPB retains an intact dollar amount in **44.2%** of narratives — not through
+  oversight, but because the standard does not treat amounts as personal
+  information. It is applied correctly; it is aimed at the wrong fields.
+
+**→ [What actually identifies people](docs/10-quasi-identifiers.md)** — this
+claim on its own, with the population curve and full provenance. It is about
+de-identification generally, not about this model.
 
 **This was built as a learning exercise, not a product.** That framing is load
 bearing: the goal was to build every branch of each fork and publish the
@@ -153,9 +158,12 @@ Stated plainly, because pretending otherwise is the failure this project is abou
   temperature. The comparison between methods is internally consistent; the
   absolute numbers would move under a different reader.
 - **Whether 36.9% or 14.3% is "the" leakage rate.** Both are real.
-  Re-identification is strongly population dependent — the same text scores 19.1%
-  against 2,500 customers, 36.9% against 10,000 and 14.3% against 40,000. A
-  leakage rate quoted without its database size is not a number.
+  Re-identification is strongly population dependent — the same text scores 36.9%
+  against 10,000 customers and 14.3% against 40,000, and it has only ever been
+  measured at those two valid sizes. A leakage rate quoted without its database
+  size is not a number. (A third, smaller size appears in `m6_dbsize.txt` and is
+  **invalid** — the injected set outran the database, so the attack measured its
+  own broken linkage. The file now says so; the code refuses to produce it.)
 
 ### The numbers
 
@@ -237,6 +245,10 @@ baselines. → [docs/06-utility.md](docs/06-utility.md)
 
 **The ablations.** Database size, the memorisation transfer curve, training-set
 size, and epoch count. → [docs/07-ablations.md](docs/07-ablations.md)
+
+**What actually identifies people.** The quasi-identifier finding on its own —
+why names stop mattering at scale and amounts do not, with the population curve
+and a provenance table. → [docs/10-quasi-identifiers.md](docs/10-quasi-identifiers.md)
 
 **What this does not do.** → [docs/08-limitations.md](docs/08-limitations.md)
 

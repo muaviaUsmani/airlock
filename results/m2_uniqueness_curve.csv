@@ -1,0 +1,5 @@
+customers,transactions,seconds,amount_unique_pct,amount_mean_customers,date_unique_pct,date_mean_customers,merchant_unique_pct,merchant_mean_customers,amount+date_unique_pct,amount+date_mean_customers,amount+date+merchant_unique_pct,amount+date+merchant_mean_customers,full_name_unique_pct,full_name_mean_customers,card_last4_unique_pct,card_last4_mean_customers
+2500,89473,0.5,34.67,6.4,0.0,119.2,0.0,330.7,98.95,1.0,99.91,1.0,95.48,1.0,85.82,1.2
+10000,359375,1.9,30.7,16.3,0.0,478.7,0.0,1328.8,95.97,1.0,99.7,1.0,85.37,1.2,52.03,1.7
+40000,1437336,8.0,27.21,43.9,0.0,1915.6,0.0,5309.9,85.86,1.2,98.82,1.0,49.27,1.8,4.11,4.8
+160000,5763243,34.5,24.7,123.4,0.0,7679.9,0.0,21274.1,61.07,1.7,95.74,1.0,3.28,5.1,0.0,18.9

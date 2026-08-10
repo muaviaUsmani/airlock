@@ -69,7 +69,14 @@ and it worked exactly as designed — twice. Then we ran the underlying command
 directly instead of through it, and quietly replaced a published table with
 test output. Version control caught it, not the safety net.
 
-**12. Writing down a plan is not the same as scheduling it.** The single most
+**12. Our strongest finding was measured once, at one size, and never checked.**
+We had a number showing that a few harmless-looking details identify almost
+everybody. We quoted it constantly. It had been measured against a database of
+one particular size and never against any other — and how a number like that
+behaves as the population grows is the whole question. Checking took forty-five
+seconds and made the finding much stronger than we had been claiming.
+
+**13. Writing down a plan is not the same as scheduling it.** The single most
 expensive mistake in this project was a step that was described in three
 separate messages and never actually written into the script that was supposed
 to run it.
@@ -304,7 +311,35 @@ that never sit in the same place as the committed ones. And keep the generated
 numbers in version control regardless — it was the only thing that actually
 worked.
 
-### 10. A plan described is not a plan scheduled
+### 10. The number we repeated most was the one we checked least
+
+The claim that an amount, a date and a merchant together identify 99.7% of
+customers is the most reusable thing this project produced. It appeared in the
+README, in the milestone docs and in the reasoning for several decisions.
+
+It had been measured against exactly one population — 10,000 customers — and
+never against another. That matters more than it sounds: uniqueness is a property
+of a value *across a population*, so it necessarily falls as the population
+grows. A number like that with no population attached is not a number, and we had
+already learned this lesson once on a different metric, where re-identification
+turned out to swing from 36.9% to 14.3% purely on database size.
+
+Measuring the curve took forty-five seconds. It made the claim considerably
+stronger: across a 64× population increase the triple loses 4.2 points, while a
+full name loses 92 and a card's last four digits lose 86. The right version of
+the finding was not "these three fields are identifying" but "**these three stay
+identifying exactly where the fields we bother to remove stop being**".
+
+We also found, in the same pass, that a results file still published a row the
+code had since been changed to refuse to produce — the fix went in, the artifact
+was never regenerated, and a documented-as-broken number sat in the repository
+being quoted.
+
+**The transferable point:** the numbers you repeat most are the ones that get
+checked least, because repetition feels like verification. Ask of any headline
+figure: measured against what, and how does it move if that changes.
+
+### 11. A plan described is not a plan scheduled
 
 The single most expensive error in the project was not technical. A necessary
 step was described as "step one" in three separate messages and was never

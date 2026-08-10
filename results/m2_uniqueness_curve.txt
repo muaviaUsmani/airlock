@@ -1,0 +1,35 @@
+M2 — quasi-identifier uniqueness against population size
+======================================================================
+
+'unique' is the share of values held by exactly one customer. It falls
+as the population grows, because more people means more collisions --
+so a uniqueness figure without its population attached is not a number.
+
+Same generator and seed as the canonical database; the 10,000 row
+reproduces results/m2_synthetic_summary.txt exactly.
+
+   customers       txns    amount    a+date   a+d+merch     name    last4
+       2,500     89,473     34.7%     99.0%       99.9%    95.5%    85.8%
+      10,000    359,375     30.7%     96.0%       99.7%    85.4%    52.0%
+      40,000  1,437,336     27.2%     85.9%       98.8%    49.3%     4.1%
+     160,000  5,763,243     24.7%     61.1%       95.7%     3.3%     0.0%
+
+----------------------------------------------------------------------
+READING IT
+
+  Across a 64x population increase
+  (2,500 -> 160,000), the amount+date+merchant
+  combination loses 4.2 points of uniqueness, ending at 95.7%.
+
+  The combination stays sharply identifying at every population
+  measured. The headline claim does not depend on a small database —
+  which is the objection it would otherwise attract.
+
+  Note what does NOT move: name and card last-4 are properties of a
+  customer, not of a transaction, so their uniqueness falls for a
+  different reason -- more customers sharing a name space.
+
+  This measures the DATABASE only. Whether an attacker can exploit it
+  from redacted text is m6_ablate_dbsize.py, which is floored at 10,000
+  customers because below that the injected set outruns the database and
+  the attack measures its own broken linkage instead.

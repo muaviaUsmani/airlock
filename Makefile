@@ -108,13 +108,19 @@ $(RESULTS)/m5_utility.txt: $(RESULTS)/m4_attack.txt
 	$(PY) scripts/m5_utility.py --n 250 --methods raw,presidio,airlock,spacy
 
 .PHONY: m6
-m6: $(RESULTS)/m6_dbsize.txt $(RESULTS)/m6_overfit_gap.txt  ## M6: ablations that need no GPU
+m6: $(RESULTS)/m6_dbsize.txt $(RESULTS)/m6_overfit_gap.txt $(RESULTS)/m2_uniqueness_curve.txt  ## M6: ablations that need no GPU
 
 $(RESULTS)/m6_dbsize.txt: $(RESULTS)/m4_attack.txt
 	$(PY) scripts/m6_ablate_dbsize.py
 
 $(RESULTS)/m6_overfit_gap.txt: $(RESULTS)/m3_arms.txt
 	$(PY) scripts/m6_overfit_gap.py --n 4000 --arms micro,base2,large
+
+# Cheap (~45s) and it answers the objection the headline attracts most: that
+# 99.7% uniqueness was measured against one small database. Generates each
+# population in a temp dir, so data/synthetic/ is never touched.
+$(RESULTS)/m2_uniqueness_curve.txt: $(RESULTS)/m2_synthetic_summary.txt
+	$(PY) scripts/m2_uniqueness_curve.py
 
 .PHONY: repro
 repro: repro-banner m0 m1 m2 m3 m4 m5 m6  ## Regenerate every number in the README from scratch

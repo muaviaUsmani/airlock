@@ -53,15 +53,19 @@ The interesting part is **measurement**. Anyone can claim they removed the
 personal information. The question nobody answers is whether it worked — and
 "worked" cannot mean "we removed the names", because:
 
-- **Names are not what identifies people.** M2 found that in a synthetic
-  transaction database, an exact date identifies nobody (479 customers share
-  one) and a merchant identifies nobody (1,329 do). Put an amount, a date and a
-  merchant together and you reach **99.7% uniqueness**. None of those three is
-  personal information. No PII detector removes any of them.
-- **Human redactors already miss this.** The CFPB's own trained redactors, working
-  to a published standard, leave an intact dollar amount in **44.2%** of
-  narratives. An exact transaction amount is one of the strongest join keys
-  there is.
+- **Names are not what identifies people.** In a synthetic transaction database
+  a date value is shared by ~479 customers on average and a merchant by ~1,329 —
+  both 0.0% unique. Put an amount, a date and a merchant together and you reach
+  **99.7% uniqueness at 10,000 customers**, and it barely moves with population:
+  **95.7% at 160,000**, where a full name has fallen to 3.3%. None of the three
+  is personal information; no PII detector removes any of them.
+- **A published redaction standard keeps the worst of them deliberately.** The
+  CFPB retains an intact dollar amount in **44.2%** of narratives. Not an
+  oversight — amounts are simply not treated as personal information, so they are
+  normalised and kept. The standard is applied correctly and aimed wrongly.
+
+Both are set out on their own, with provenance, in
+[what actually identifies people](10-quasi-identifiers.md).
 
 So Airlock builds a synthetic transaction database and then **attacks its own
 output** — takes the redacted text and tries to find the one customer it belongs

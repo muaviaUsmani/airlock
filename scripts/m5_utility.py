@@ -376,10 +376,10 @@ def main() -> int:
             L.append(f"  {name:<16} {u:>10.1f}% {overall:>8.1f}% "
                      f"{base-overall:>13.1f}")
         L += ["", f"  Re-identification source: {leak_src}.",
-              "  That number is POPULATION DEPENDENT — raw text scores 19.1% against",
-              "  2,500 customers, 36.9% against 10,000 and 14.3% against 40,000",
-              "  (results/m6_dbsize.txt). A leakage rate quoted without its database",
-              "  size is not a number. The utility column beside it does not move.",
+              "  That number is POPULATION DEPENDENT — raw text scores 36.9% against",
+              "  10,000 customers and 14.3% against 40,000 (results/m6_dbsize.txt).",
+              "  A leakage rate quoted without its database size is not a number.",
+              "  The utility column beside it does not move.",
               "",
               "  A redactor is only good if it moves DOWN the first column without",
               "  moving far down the second."]
